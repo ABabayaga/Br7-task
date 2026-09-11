@@ -6,6 +6,7 @@ import { AppService } from './app.service.js';
 import { ProjectsModule } from './projects/projects.module.js';
 import { TasksModule } from './tasks/tasks.module.js';
 import { UsersModule } from './users/users.module.js';
+import { AuthModule } from './auth/auth.module.js';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { UsersModule } from './users/users.module.js';
         uri: config.getOrThrow<string>('MONGODB_URI'),
       }),
     }),
+    AuthModule,
     UsersModule,
     ProjectsModule,
     TasksModule,
