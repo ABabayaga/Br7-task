@@ -14,6 +14,7 @@ function renderLayout() {
           <Route element={<AppLayout />}>
             <Route path="/" element={<div>Home content</div>} />
             <Route path="/projetos" element={<div>Projetos content</div>} />
+            <Route path="/usuarios" element={<div>Usuarios content</div>} />
           </Route>
           <Route path="/login" element={<div>Login content</div>} />
         </Routes>
@@ -33,7 +34,12 @@ describe('AppLayout', () => {
 
   it('logs out and navigates to /login when the logout button is clicked', async () => {
     const logout = vi.fn();
-    vi.spyOn(authContext, 'useAuth').mockReturnValue({ token: 'fake-jwt', login: vi.fn(), logout });
+    vi.spyOn(authContext, 'useAuth').mockReturnValue({
+      token: 'fake-jwt',
+      role: null,
+      login: vi.fn(),
+      logout,
+    });
 
     renderLayout();
 
@@ -41,5 +47,26 @@ describe('AppLayout', () => {
 
     expect(logout).toHaveBeenCalled();
     expect(await screen.findByText('Login content')).toBeInTheDocument();
+  });
+
+  it('shows the Usuários nav item only for admins', () => {
+    vi.spyOn(authContext, 'useAuth').mockReturnValue({
+      token: 'fake-jwt',
+      role: 'member',
+      login: vi.fn(),
+      logout: vi.fn(),
+    });
+    const { unmount } = renderLayout();
+    expect(screen.queryByRole('link', { name: /usuários/i })).not.toBeInTheDocument();
+    unmount();
+
+    vi.spyOn(authContext, 'useAuth').mockReturnValue({
+      token: 'fake-jwt',
+      role: 'admin',
+      login: vi.fn(),
+      logout: vi.fn(),
+    });
+    renderLayout();
+    expect(screen.getByRole('link', { name: /usuários/i })).toBeInTheDocument();
   });
 });

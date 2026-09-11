@@ -7,7 +7,7 @@ const navItemClass = ({ isActive }: { isActive: boolean }) =>
   }`;
 
 export function AppLayout() {
-  const { logout } = useAuth();
+  const { role, logout } = useAuth();
   const navigate = useNavigate();
 
   function handleLogout() {
@@ -33,6 +33,14 @@ export function AppLayout() {
               </svg>
               Projetos
             </NavLink>
+            {role === 'admin' && (
+              <NavLink to="/usuarios" className={navItemClass}>
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4" />
+                </svg>
+                Usuários
+              </NavLink>
+            )}
           </nav>
         </div>
 

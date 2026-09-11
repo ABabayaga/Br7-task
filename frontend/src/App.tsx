@@ -6,6 +6,7 @@ import { LoginPage } from './pages/LoginPage.js';
 import { HomePage } from './pages/HomePage.js';
 import { DashboardPage } from './pages/DashboardPage.js';
 import { ProjectGanttPage } from './pages/ProjectGanttPage.js';
+import { UsersPage } from './pages/UsersPage.js';
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/projetos" element={<DashboardPage />} />
               <Route path="/projects/:id" element={<ProjectGanttPage />} />
+              <Route path="/usuarios" element={<UsersPage />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
