@@ -5,6 +5,7 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { ProjectsModule } from './projects/projects.module.js';
 import { TasksModule } from './tasks/tasks.module.js';
+import { UsersModule } from './users/users.module.js';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { TasksModule } from './tasks/tasks.module.js';
         uri: config.getOrThrow<string>('MONGODB_URI'),
       }),
     }),
+    UsersModule,
     ProjectsModule,
     TasksModule,
   ],
