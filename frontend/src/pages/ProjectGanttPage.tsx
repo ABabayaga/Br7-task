@@ -2,16 +2,19 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Gantt, ViewMode, type Task as GanttTask } from 'gantt-task-react';
 import 'gantt-task-react/dist/index.css';
-import { listTasks, createTask, updateTask } from '../api/tasks.js';
+import { listTasks, createTask, updateTask, deleteTask } from '../api/tasks.js';
 import { mapTasksToGanttFormat } from '../gantt/mapTasksToGanttFormat.js';
 import { CreateTaskModal } from '../components/CreateTaskModal.js';
+import { TaskEditModal } from '../components/TaskEditModal.js';
 import type { Task } from '../types.js';
 
 export function ProjectGanttPage() {
   const { id: projectId } = useParams<{ id: string }>();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const selectedTask = tasks.find((t) => t._id === selectedTaskId) ?? null;
 
   function refresh() {
     if (!projectId) return;
@@ -52,6 +55,24 @@ export function ProjectGanttPage() {
     refresh();
   }
 
+  async function handleTaskSave(dto: Partial<Omit<Task, '_id' | 'projectId'>>) {
+    if (!selectedTaskId) return;
+    setError(null);
+    try {
+      await updateTask(selectedTaskId, dto);
+      setSelectedTaskId(null);
+      refresh();
+    } catch {
+      setError('Não foi possível salvar a tarefa (verifique se não criou um ciclo de dependência).');
+    }
+  }
+
+  async function handleTaskDelete(id: string) {
+    await deleteTask(id);
+    setSelectedTaskId(null);
+    refresh();
+  }
+
   const ganttTasks = mapTasksToGanttFormat(tasks);
 
   return (
@@ -74,6 +95,7 @@ export function ProjectGanttPage() {
           viewMode={ViewMode.Day}
           onDateChange={handleDateChange}
           onProgressChange={handleProgressChange}
+          onClick={(ganttTask) => setSelectedTaskId(ganttTask.id)}
         />
       ) : (
         <p className="text-gray-500">Nenhuma tarefa ainda.</p>
@@ -81,6 +103,16 @@ export function ProjectGanttPage() {
 
       {showCreateModal && (
         <CreateTaskModal onClose={() => setShowCreateModal(false)} onCreate={handleCreate} />
+      )}
+
+      {selectedTask && (
+        <TaskEditModal
+          task={selectedTask}
+          otherTasks={tasks.filter((t) => t._id !== selectedTask._id)}
+          onClose={() => setSelectedTaskId(null)}
+          onSave={handleTaskSave}
+          onDelete={handleTaskDelete}
+        />
       )}
     </div>
   );
