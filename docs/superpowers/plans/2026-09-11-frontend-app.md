@@ -82,32 +82,43 @@ npm create vite@latest . -- --template react-ts
 npm install
 ```
 
-- [ ] **Step 2: Install runtime and dev dependencies**
+- [ ] **Step 2: Pin React to 18, then install runtime and dev dependencies**
 
+> **Deviation from plan (found during execution):** Vite's `react-ts` template installs React 19, but `gantt-task-react`'s peer dependency caps at `^18.0.0` and has no newer release — `npm install gantt-task-react` fails with an ERESOLVE conflict. Pin React to 18 first (the proven-compatible combination) rather than forcing the install.
+
+In `frontend/package.json`, change:
+```json
+"react": "^19.2.8",
+"react-dom": "^19.2.8"
+```
+to:
+```json
+"react": "^18.3.1",
+"react-dom": "^18.3.1"
+```
+and `@types/react`/`@types/react-dom` in `devDependencies` similarly to their `^18.x` versions. Then:
 ```bash
+rm -rf node_modules package-lock.json
+npm install
 npm install react-router-dom axios gantt-task-react
-npm install -D tailwindcss postcss autoprefixer vitest jsdom @testing-library/react @testing-library/jest-dom @testing-library/user-event
+npm install -D tailwindcss vitest jsdom @testing-library/react @testing-library/jest-dom @testing-library/user-event
 ```
 
 - [ ] **Step 3: Configure Tailwind**
 
-Run: `npx tailwindcss init -p`
+> **Deviation from plan (found during execution):** `npm install tailwindcss` pulled Tailwind **v4**, which dropped the `tailwindcss init` CLI and the `tailwind.config.js`/PostCSS setup entirely — v4's supported path for Vite is the `@tailwindcss/vite` plugin plus a single `@import "tailwindcss";` line. No `tailwind.config.js` or `postcss.config.js` needed.
 
-Replace `frontend/tailwind.config.js` content array:
-```javascript
-export default {
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
-  theme: { extend: {} },
-  plugins: [],
-};
+```bash
+npm uninstall postcss autoprefixer
+npm install -D @tailwindcss/vite
 ```
 
 Replace `frontend/src/index.css` with:
 ```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 ```
+
+(Tailwind wiring happens in `vite.config.ts` in Step 4 below via the `@tailwindcss/vite` plugin, alongside the Vitest config.)
 
 - [ ] **Step 4: Configure Vitest inside `vite.config.ts`**
 
@@ -116,9 +127,10 @@ Replace `frontend/vite.config.ts`:
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   test: {
     globals: true,
     environment: 'jsdom',
