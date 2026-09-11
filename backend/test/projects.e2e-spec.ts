@@ -1,0 +1,74 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import request from 'supertest';
+import { App } from 'supertest/types';
+import { AppModule } from '../src/app.module.js';
+import { startTestDb } from './test-db.helper.js';
+
+describe('Projects (e2e)', () => {
+  let app: INestApplication<App>;
+  let stopDb: () => Promise<void>;
+  let token: string;
+
+  beforeAll(async () => {
+    ({ stop: stopDb } = await startTestDb());
+  });
+
+  beforeEach(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+    app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    await app.init();
+
+    const login = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: 'admin@br7.com', password: 'test-admin-password' });
+    token = login.body.accessToken;
+  });
+
+  afterEach(async () => {
+    await app.close();
+  });
+
+  afterAll(async () => {
+    await stopDb();
+  });
+
+  it('rejects an unauthenticated request', async () => {
+    await request(app.getHttpServer()).get('/projects').expect(401);
+  });
+
+  it('creates, reads, updates (archives) and deletes a project', async () => {
+    const created = await request(app.getHttpServer())
+      .post('/projects')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Campanha X', description: 'Lançamento Q4' })
+      .expect(201);
+    const id = created.body._id;
+    expect(created.body.name).toBe('Campanha X');
+
+    await request(app.getHttpServer())
+      .get(`/projects/${id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    const archived = await request(app.getHttpServer())
+      .patch(`/projects/${id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ status: 'archived' })
+      .expect(200);
+    expect(archived.body.status).toBe('archived');
+
+    await request(app.getHttpServer())
+      .delete(`/projects/${id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .get(`/projects/${id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(404);
+  });
+});
