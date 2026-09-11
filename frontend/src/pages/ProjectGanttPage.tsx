@@ -1,0 +1,87 @@
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { Gantt, ViewMode, type Task as GanttTask } from 'gantt-task-react';
+import 'gantt-task-react/dist/index.css';
+import { listTasks, createTask, updateTask } from '../api/tasks.js';
+import { mapTasksToGanttFormat } from '../gantt/mapTasksToGanttFormat.js';
+import { CreateTaskModal } from '../components/CreateTaskModal.js';
+import type { Task } from '../types.js';
+
+export function ProjectGanttPage() {
+  const { id: projectId } = useParams<{ id: string }>();
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function refresh() {
+    if (!projectId) return;
+    listTasks(projectId).then(setTasks);
+  }
+
+  useEffect(refresh, [projectId]);
+
+  async function handleDateChange(ganttTask: GanttTask) {
+    setError(null);
+    try {
+      await updateTask(ganttTask.id, {
+        startDate: ganttTask.start.toISOString(),
+        endDate: ganttTask.end.toISOString(),
+      });
+      refresh();
+    } catch {
+      setError('Não foi possível atualizar as datas.');
+      refresh();
+    }
+  }
+
+  async function handleProgressChange(ganttTask: GanttTask) {
+    setError(null);
+    try {
+      await updateTask(ganttTask.id, { progress: ganttTask.progress });
+      refresh();
+    } catch {
+      setError('Não foi possível atualizar o progresso.');
+      refresh();
+    }
+  }
+
+  async function handleCreate(dto: { name: string; startDate: string; endDate: string }) {
+    if (!projectId) return;
+    await createTask(projectId, dto);
+    setShowCreateModal(false);
+    refresh();
+  }
+
+  const ganttTasks = mapTasksToGanttFormat(tasks);
+
+  return (
+    <div className="p-8">
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-800">Gantt do projeto</h1>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+        >
+          Adicionar tarefa
+        </button>
+      </div>
+
+      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+
+      {ganttTasks.length > 0 ? (
+        <Gantt
+          tasks={ganttTasks}
+          viewMode={ViewMode.Day}
+          onDateChange={handleDateChange}
+          onProgressChange={handleProgressChange}
+        />
+      ) : (
+        <p className="text-gray-500">Nenhuma tarefa ainda.</p>
+      )}
+
+      {showCreateModal && (
+        <CreateTaskModal onClose={() => setShowCreateModal(false)} onCreate={handleCreate} />
+      )}
+    </div>
+  );
+}
