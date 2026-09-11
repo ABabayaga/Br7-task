@@ -108,10 +108,15 @@ Novo app criado do zero em `frontend/`.
   - Renderiza `gantt-task-react` com as tarefas do projeto.
   - Arrastar barra → `PATCH /tasks/:id` com novas datas.
   - Redimensionar barra → `PATCH /tasks/:id` com nova `endDate`.
-  - Conectar duas barras → `PATCH /tasks/:id` adicionando dependência
-    (erro do backend por ciclo é mostrado como toast).
+  - `gantt-task-react` não suporta criar dependência desenhando uma seta
+    no canvas (recurso pedido, nunca implementado na lib —
+    [issue #44](https://github.com/MaTeMaTuK/gantt-task-react/issues/44)).
+    Dependências são definidas via um campo multi-select de
+    predecessoras no modal de editar tarefa; o gráfico apenas
+    **renderiza** as setas resultantes — arrastar/redimensionar/
+    progresso continuam interativos no canvas.
   - Clique numa tarefa abre painel lateral/modal para editar nome,
-    responsável, progresso, ou excluir.
+    responsável, progresso, predecessoras, ou excluir.
   - Botão "Adicionar tarefa" abre modal de criação.
 - **Estilo:** Tailwind CSS, funcional e direto — sem investimento em
   design system elaborado (ferramenta interna).
