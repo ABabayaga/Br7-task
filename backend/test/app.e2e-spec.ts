@@ -3,9 +3,15 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module.js';
+import { startTestDb } from './test-db.helper.js';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
+  let stopDb: () => Promise<void>;
+
+  beforeAll(async () => {
+    ({ stop: stopDb } = await startTestDb());
+  });
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -25,5 +31,9 @@ describe('AppController (e2e)', () => {
 
   afterEach(async () => {
     await app.close();
+  });
+
+  afterAll(async () => {
+    await stopDb();
   });
 });
