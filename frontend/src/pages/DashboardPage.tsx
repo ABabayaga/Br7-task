@@ -31,7 +31,7 @@ export function DashboardPage() {
         <h1 className="text-2xl font-bold text-gray-800">Projetos</h1>
         <button
           onClick={() => setShowModal(true)}
-          className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          className="rounded-lg bg-linear-to-r from-[#E0176A] to-[#FF5A36] px-4 py-2 font-medium text-white transition-transform hover:scale-[1.02]"
         >
           Novo projeto
         </button>
@@ -43,7 +43,7 @@ export function DashboardPage() {
             key={project._id}
             className="flex items-center justify-between rounded border border-gray-200 bg-white p-4 shadow-sm"
           >
-            <Link to={`/projects/${project._id}`} className="font-medium text-blue-700 hover:underline">
+            <Link to={`/projects/${project._id}`} className="font-medium text-[#E0176A] hover:underline">
               {project.name}
             </Link>
             <div className="flex items-center gap-3">

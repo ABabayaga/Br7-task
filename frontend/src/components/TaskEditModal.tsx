@@ -94,6 +94,7 @@ export function TaskEditModal({ task, otherTasks, onClose, onSave, onDelete }: P
                   type="checkbox"
                   checked={dependencies.includes(other._id)}
                   onChange={() => toggleDependency(other._id)}
+                  className="rounded border-gray-300 text-[#E0176A] focus:ring-[#E0176A]"
                 />
                 {other.name}
               </label>
@@ -113,7 +114,7 @@ export function TaskEditModal({ task, otherTasks, onClose, onSave, onDelete }: P
             <button type="button" onClick={onClose} className="rounded px-4 py-2 text-gray-600">
               Cancelar
             </button>
-            <button type="submit" className="rounded bg-blue-600 px-4 py-2 text-white">
+            <button type="submit" className="rounded-lg bg-linear-to-r from-[#E0176A] to-[#FF5A36] px-4 py-2 font-medium text-white transition-transform hover:scale-[1.02]">
               Salvar
             </button>
           </div>
