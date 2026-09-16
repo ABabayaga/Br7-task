@@ -4,7 +4,8 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
 import { StageTemplatesPage } from './StageTemplatesPage.js';
 import * as stageTemplatesApi from '../api/stageTemplates.js';
-import type { StageTemplate } from '../types.js';
+import * as phasesApi from '../api/phases.js';
+import type { Phase, StageTemplate } from '../types.js';
 
 const stages: StageTemplate[] = [
   {
@@ -27,6 +28,10 @@ const stages: StageTemplate[] = [
   },
 ];
 
+const phases: Phase[] = [
+  { _id: 'ph1', serviceTypeId: 'st1', name: 'Fase I', color: '#2563EB', order: 0, startDay: 1, endDay: 2, active: true },
+];
+
 function renderPage() {
   return render(
     <MemoryRouter initialEntries={['/tipos-servico/st1/etapas']}>
@@ -40,6 +45,7 @@ function renderPage() {
 describe('StageTemplatesPage', () => {
   it('lists stages in order and creates a new one', async () => {
     vi.spyOn(stageTemplatesApi, 'listStageTemplates').mockResolvedValue(stages);
+    vi.spyOn(phasesApi, 'listPhases').mockResolvedValue([]);
     vi.spyOn(stageTemplatesApi, 'createStageTemplate').mockResolvedValue({
       _id: 's3',
       serviceTypeId: 'st1',
@@ -73,6 +79,7 @@ describe('StageTemplatesPage', () => {
 
   it('moves a stage down via the reorder button', async () => {
     vi.spyOn(stageTemplatesApi, 'listStageTemplates').mockResolvedValue(stages);
+    vi.spyOn(phasesApi, 'listPhases').mockResolvedValue([]);
     vi.spyOn(stageTemplatesApi, 'reorderStageTemplates').mockResolvedValue([stages[1], stages[0]]);
 
     renderPage();
@@ -83,6 +90,56 @@ describe('StageTemplatesPage', () => {
 
     await waitFor(() =>
       expect(stageTemplatesApi.reorderStageTemplates).toHaveBeenCalledWith('st1', ['s2', 's1']),
+    );
+  });
+
+  it('lists phases and creates a new one', async () => {
+    vi.spyOn(stageTemplatesApi, 'listStageTemplates').mockResolvedValue([]);
+    vi.spyOn(phasesApi, 'listPhases').mockResolvedValue(phases);
+    vi.spyOn(phasesApi, 'createPhase').mockResolvedValue({
+      _id: 'ph2',
+      serviceTypeId: 'st1',
+      name: 'Fase II',
+      color: '#3B82F6',
+      order: 1,
+      startDay: 1,
+      endDay: 4,
+      active: true,
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Fase I')).toBeInTheDocument();
+    expect(screen.getByText('dias 1–2')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /nova fase/i }));
+    await userEvent.type(screen.getByLabelText(/nome da fase/i), 'Fase II');
+    await userEvent.type(screen.getByLabelText(/dia inicial/i), '1');
+    await userEvent.type(screen.getByLabelText(/dia final/i), '4');
+    await userEvent.click(screen.getByRole('button', { name: /^salvar fase$/i }));
+
+    await waitFor(() =>
+      expect(phasesApi.createPhase).toHaveBeenCalledWith('st1', {
+        name: 'Fase II',
+        color: expect.any(String),
+        startDay: 1,
+        endDay: 4,
+      }),
+    );
+  });
+
+  it('archives a phase', async () => {
+    vi.spyOn(stageTemplatesApi, 'listStageTemplates').mockResolvedValue([]);
+    vi.spyOn(phasesApi, 'listPhases').mockResolvedValue(phases);
+    vi.spyOn(phasesApi, 'updatePhase').mockResolvedValue({ ...phases[0], active: false });
+
+    renderPage();
+    await screen.findByText('Fase I');
+
+    await userEvent.click(screen.getByRole('button', { name: /^desativar$/i }));
+
+    await waitFor(() =>
+      expect(phasesApi.updatePhase).toHaveBeenCalledWith('ph1', { active: false }),
     );
   });
 });
