@@ -14,6 +14,7 @@ const stages: StageTemplate[] = [
     name: 'Briefing',
     defaultSector: 'diretoria_criacao',
     defaultDurationDays: 2,
+    active: true,
   },
   {
     _id: 's2',
@@ -22,6 +23,7 @@ const stages: StageTemplate[] = [
     name: 'Facebook',
     defaultSector: 'criacao',
     defaultDurationDays: 1,
+    active: true,
   },
 ];
 
@@ -45,6 +47,7 @@ describe('StageTemplatesPage', () => {
       name: 'LinkedIn',
       defaultSector: 'criacao',
       defaultDurationDays: 1,
+      active: true,
     });
 
     renderPage();

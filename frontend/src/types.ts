@@ -6,6 +6,7 @@ export const SECTORS = [
   'diretoria_criacao',
   'criacao',
   'desenvolvimento',
+  'cliente',
 ] as const;
 
 export type Sector = (typeof SECTORS)[number];
@@ -16,11 +17,23 @@ export const SECTOR_LABELS: Record<Sector, string> = {
   diretoria_criacao: 'Diretoria de Criação',
   criacao: 'Criação',
   desenvolvimento: 'Desenvolvimento',
+  cliente: 'Cliente',
 };
 
 export interface ServiceType {
   _id: string;
   name: string;
+  active: boolean;
+}
+
+export interface Phase {
+  _id: string;
+  serviceTypeId: string;
+  name: string;
+  color: string;
+  order: number;
+  startDay: number;
+  endDay: number;
   active: boolean;
 }
 
@@ -31,6 +44,8 @@ export interface StageTemplate {
   name: string;
   defaultSector: Sector;
   defaultDurationDays: number;
+  phaseId?: string;
+  active: boolean;
 }
 
 export interface Client {

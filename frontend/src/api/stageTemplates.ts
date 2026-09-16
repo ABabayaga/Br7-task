@@ -9,7 +9,7 @@ export function listStageTemplates(serviceTypeId: string) {
 
 export function createStageTemplate(
   serviceTypeId: string,
-  dto: { name: string; defaultSector: Sector; defaultDurationDays: number },
+  dto: { name: string; defaultSector: Sector; defaultDurationDays: number; phaseId?: string },
 ) {
   return apiClient
     .post<StageTemplate>(`/service-types/${serviceTypeId}/stage-templates`, dto)
@@ -18,7 +18,13 @@ export function createStageTemplate(
 
 export function updateStageTemplate(
   id: string,
-  dto: { name?: string; defaultSector?: Sector; defaultDurationDays?: number },
+  dto: {
+    name?: string;
+    defaultSector?: Sector;
+    defaultDurationDays?: number;
+    phaseId?: string | null;
+    active?: boolean;
+  },
 ) {
   return apiClient.patch<StageTemplate>(`/stage-templates/${id}`, dto).then((res) => res.data);
 }
