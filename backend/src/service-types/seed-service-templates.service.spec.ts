@@ -59,6 +59,12 @@ describe('SeedServiceTemplatesService', () => {
       defaultDurationDays: 1,
       order: 10,
     });
+    expect(socialMediaStageCalls[7][1]).toEqual({
+      name: 'Material enviado ao cliente',
+      defaultSector: 'cliente',
+      defaultDurationDays: 1,
+      order: 7,
+    });
   });
 
   it('skips a flow whose service type already exists', async () => {

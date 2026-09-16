@@ -18,10 +18,8 @@ interface ServiceTypeSeed {
  * Cada lista segue o "caminho feliz" do fluxo: os ramos de aprovação/
  * alteração do PDF (ex: "9A aprovado" / "9B alteração solicitada") viram
  * loops manuais no Gantt depois, não etapas duplicadas no template.
- * Etapas que no PDF ficam "com o Cliente" sem responsável interno
- * explícito são atribuídas ao setor que enviou/acompanha aquela etapa,
- * já que o enum de Setor não modela "Cliente" como valor (ver spec
- * 2026-09-15-service-templates-design.md).
+ * Etapas que o PDF descreve como "está com: Cliente" usam
+ * defaultSector: 'cliente'.
  */
 export const SERVICE_TYPE_SEEDS: ServiceTypeSeed[] = [
   {
@@ -34,7 +32,7 @@ export const SERVICE_TYPE_SEEDS: ServiceTypeSeed[] = [
       { name: 'Facebook', defaultSector: 'criacao' },
       { name: 'LinkedIn', defaultSector: 'criacao' },
       { name: 'Revisão interna', defaultSector: 'diretoria_criacao' },
-      { name: 'Material enviado ao cliente', defaultSector: 'diretoria_criacao' },
+      { name: 'Material enviado ao cliente', defaultSector: 'cliente' },
       { name: 'Conteúdo aprovado', defaultSector: 'criacao' },
       { name: 'Cronograma em execução', defaultSector: 'criacao' },
       { name: 'Cronograma concluído', defaultSector: 'diretoria_criacao' },
@@ -49,7 +47,7 @@ export const SERVICE_TYPE_SEEDS: ServiceTypeSeed[] = [
       { name: 'Criação da logo', defaultSector: 'criacao' },
       { name: 'Revisão interna', defaultSector: 'diretoria_criacao' },
       { name: 'Preparação da apresentação', defaultSector: 'criacao' },
-      { name: 'Apresentação ao cliente', defaultSector: 'diretoria_criacao' },
+      { name: 'Apresentação ao cliente', defaultSector: 'cliente' },
       { name: 'Identidade aprovada', defaultSector: 'criacao' },
       { name: 'Branding concluído', defaultSector: 'diretoria_criacao' },
     ],
@@ -61,14 +59,14 @@ export const SERVICE_TYPE_SEEDS: ServiceTypeSeed[] = [
       { name: 'Briefing do site', defaultSector: 'diretoria_criacao' },
       { name: 'Primeiro protótipo', defaultSector: 'desenvolvimento' },
       { name: 'Revisão interna', defaultSector: 'diretoria_criacao' },
-      { name: 'Protótipo enviado', defaultSector: 'diretoria_executiva' },
+      { name: 'Protótipo enviado', defaultSector: 'cliente' },
       { name: 'Alterações recebidas', defaultSector: 'diretoria_executiva' },
       { name: 'Contrato do site', defaultSector: 'diretoria_executiva' },
-      { name: 'Contrato enviado', defaultSector: 'diretoria_executiva' },
+      { name: 'Contrato enviado', defaultSector: 'cliente' },
       { name: 'Contrato assinado', defaultSector: 'desenvolvimento' },
       { name: 'Alterações em desenvolvimento', defaultSector: 'desenvolvimento' },
       { name: 'Revisão interna da nova versão', defaultSector: 'diretoria_criacao' },
-      { name: 'Site enviado novamente ao cliente', defaultSector: 'diretoria_criacao' },
+      { name: 'Site enviado novamente ao cliente', defaultSector: 'cliente' },
       { name: 'Site aprovado', defaultSector: 'desenvolvimento' },
       { name: 'Publicação', defaultSector: 'desenvolvimento' },
       { name: 'Site no ar', defaultSector: 'desenvolvimento' },
@@ -85,7 +83,7 @@ export const SERVICE_TYPE_SEEDS: ServiceTypeSeed[] = [
       { name: 'Material captado', defaultSector: 'criacao' },
       { name: 'Edição', defaultSector: 'criacao' },
       { name: 'Revisão interna', defaultSector: 'diretoria_criacao' },
-      { name: 'Vídeo enviado', defaultSector: 'criacao' },
+      { name: 'Vídeo enviado', defaultSector: 'cliente' },
       { name: 'Aprovado', defaultSector: 'criacao' },
     ],
   },
@@ -94,15 +92,15 @@ export const SERVICE_TYPE_SEEDS: ServiceTypeSeed[] = [
     stages: [
       { name: 'Planejamento da gravação', defaultSector: 'diretoria_criacao' },
       { name: 'Preparação das orientações', defaultSector: 'criacao' },
-      { name: 'Orientações enviadas', defaultSector: 'criacao' },
-      { name: 'Cliente realizando captação', defaultSector: 'criacao' },
-      { name: 'Aguardando arquivos', defaultSector: 'criacao' },
+      { name: 'Orientações enviadas', defaultSector: 'cliente' },
+      { name: 'Cliente realizando captação', defaultSector: 'cliente' },
+      { name: 'Aguardando arquivos', defaultSector: 'cliente' },
       { name: 'Material recebido', defaultSector: 'criacao' },
       { name: 'Análise do material', defaultSector: 'diretoria_criacao' },
       { name: 'Edição', defaultSector: 'criacao' },
       { name: 'Revisão interna', defaultSector: 'diretoria_criacao' },
-      { name: 'Material enviado', defaultSector: 'diretoria_criacao' },
-      { name: 'Aprovação', defaultSector: 'diretoria_criacao' },
+      { name: 'Material enviado', defaultSector: 'cliente' },
+      { name: 'Aprovação', defaultSector: 'cliente' },
       { name: 'Finalizado', defaultSector: 'diretoria_criacao' },
     ],
   },

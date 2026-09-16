@@ -4,6 +4,7 @@ export const SECTORS = [
   'diretoria_criacao',
   'criacao',
   'desenvolvimento',
+  'cliente',
 ] as const;
 
 export type Sector = (typeof SECTORS)[number];
