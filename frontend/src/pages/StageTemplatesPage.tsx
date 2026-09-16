@@ -59,13 +59,48 @@ export function StageTemplatesPage() {
     refresh();
   }
 
-  async function handleMove(index: number, direction: -1 | 1) {
+  interface StageGroup {
+    key: string;
+    label: string;
+    phase: Phase | null;
+    stages: StageTemplate[];
+  }
+
+  const stageGroups: StageGroup[] = [
+    ...phases.map((phase) => ({
+      key: phase._id,
+      label: phase.name,
+      phase,
+      stages: stages.filter((s) => s.phaseId === phase._id),
+    })),
+    {
+      key: 'none',
+      label: 'Sem fase',
+      phase: null,
+      stages: stages.filter((s) => !s.phaseId || !phases.some((p) => p._id === s.phaseId)),
+    },
+  ].filter((group) => group.stages.length > 0);
+
+  async function handleMoveStageWithinGroup(
+    group: StageGroup,
+    stage: StageTemplate,
+    direction: -1 | 1,
+  ) {
     if (!serviceTypeId) return;
-    const target = index + direction;
-    if (target < 0 || target >= stages.length) return;
-    const reordered = [...stages];
-    [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
-    await reorderStageTemplates(serviceTypeId, reordered.map((s) => s._id));
+    const groupIds = group.stages.map((s) => s._id);
+    const indexInGroup = groupIds.indexOf(stage._id);
+    const targetIndexInGroup = indexInGroup + direction;
+    if (targetIndexInGroup < 0 || targetIndexInGroup >= groupIds.length) return;
+    [groupIds[indexInGroup], groupIds[targetIndexInGroup]] = [
+      groupIds[targetIndexInGroup],
+      groupIds[indexInGroup],
+    ];
+
+    // Flatten every group back in (phase order, then in-group order) —
+    // this becomes the new flat `order` sequence the backend stores,
+    // matching what the grouped UI displays.
+    const flattened = stageGroups.flatMap((g) => (g.key === group.key ? groupIds : g.stages.map((s) => s._id)));
+    await reorderStageTemplates(serviceTypeId, flattened);
     refresh();
   }
 
@@ -189,60 +224,74 @@ export function StageTemplatesPage() {
         </button>
       </div>
 
-      <ul className="space-y-3">
-        {stages.map((stage, index) => (
-          <li
-            key={stage._id}
-            className="flex items-center justify-between rounded border border-gray-200 bg-white p-4 shadow-sm"
-          >
-            <div>
-              <p className="font-medium text-gray-800">
-                {stage.name}
-                {!stage.active && <span className="ml-2 text-xs text-gray-400">(arquivada)</span>}
-              </p>
-              <p className="text-sm text-gray-500">
-                {SECTOR_LABELS[stage.defaultSector]} · {stage.defaultDurationDays} dia(s)
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                aria-label="Mover para cima"
-                disabled={index === 0}
-                onClick={() => handleMove(index, -1)}
-                className="rounded px-2 py-1 text-gray-500 hover:text-gray-800 disabled:opacity-30"
+      {stageGroups.map((group) => (
+        <div key={group.key} className="mb-8">
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-gray-500">
+            {group.phase && (
+              <span
+                className="h-3 w-3 rounded"
+                style={{ backgroundColor: group.phase.color }}
+                aria-hidden="true"
+              />
+            )}
+            {group.label}
+          </h3>
+          <ul className="space-y-3">
+            {group.stages.map((stage) => (
+              <li
+                key={stage._id}
+                className="flex items-center justify-between rounded border border-gray-200 bg-white p-4 shadow-sm"
               >
-                ↑
-              </button>
-              <button
-                aria-label="Mover para baixo"
-                disabled={index === stages.length - 1}
-                onClick={() => handleMove(index, 1)}
-                className="rounded px-2 py-1 text-gray-500 hover:text-gray-800 disabled:opacity-30"
-              >
-                ↓
-              </button>
-              <button
-                onClick={() => setModalStage(stage)}
-                className="text-sm text-gray-500 hover:text-gray-800"
-              >
-                Editar
-              </button>
-              <button
-                onClick={() => handleToggleStageActive(stage)}
-                className="text-sm text-gray-500 hover:text-gray-800"
-              >
-                {stage.active ? 'Desativar' : 'Ativar'}
-              </button>
-              <button
-                onClick={() => handleDeleteStage(stage._id)}
-                className="text-sm text-gray-500 hover:text-red-600"
-              >
-                Remover
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+                <div>
+                  <p className="font-medium text-gray-800">
+                    {stage.name}
+                    {!stage.active && <span className="ml-2 text-xs text-gray-400">(arquivada)</span>}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {SECTOR_LABELS[stage.defaultSector]} · {stage.defaultDurationDays} dia(s)
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    aria-label="Mover para cima"
+                    disabled={group.stages[0]._id === stage._id}
+                    onClick={() => handleMoveStageWithinGroup(group, stage, -1)}
+                    className="rounded px-2 py-1 text-gray-500 hover:text-gray-800 disabled:opacity-30"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    aria-label="Mover para baixo"
+                    disabled={group.stages[group.stages.length - 1]._id === stage._id}
+                    onClick={() => handleMoveStageWithinGroup(group, stage, 1)}
+                    className="rounded px-2 py-1 text-gray-500 hover:text-gray-800 disabled:opacity-30"
+                  >
+                    ↓
+                  </button>
+                  <button
+                    onClick={() => setModalStage(stage)}
+                    className="text-sm text-gray-500 hover:text-gray-800"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => handleToggleStageActive(stage)}
+                    className="text-sm text-gray-500 hover:text-gray-800"
+                  >
+                    {stage.active ? 'Desativar' : 'Ativar'}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteStage(stage._id)}
+                    className="text-sm text-gray-500 hover:text-red-600"
+                  >
+                    Remover
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
 
       {modalStage && (
         <StageTemplateModal

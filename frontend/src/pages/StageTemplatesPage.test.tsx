@@ -142,4 +142,52 @@ describe('StageTemplatesPage', () => {
       expect(phasesApi.updatePhase).toHaveBeenCalledWith('ph1', { active: false }),
     );
   });
+
+  it('shows a Fase select in the stage modal and sends the chosen phaseId', async () => {
+    vi.spyOn(stageTemplatesApi, 'listStageTemplates').mockResolvedValue(stages);
+    vi.spyOn(phasesApi, 'listPhases').mockResolvedValue(phases);
+    vi.spyOn(stageTemplatesApi, 'createStageTemplate').mockResolvedValue({
+      _id: 's3',
+      serviceTypeId: 'st1',
+      order: 2,
+      name: 'LinkedIn',
+      defaultSector: 'criacao',
+      defaultDurationDays: 1,
+      active: true,
+    });
+
+    renderPage();
+    await screen.findByText('Briefing');
+
+    await userEvent.click(screen.getByRole('button', { name: /nova etapa/i }));
+    await userEvent.type(screen.getByLabelText(/^nome$/i), 'LinkedIn');
+    await userEvent.selectOptions(screen.getByLabelText(/setor/i), 'criacao');
+    await userEvent.type(screen.getByLabelText(/duração/i), '1');
+    await userEvent.selectOptions(screen.getByLabelText(/^fase$/i), 'ph1');
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }));
+
+    await waitFor(() =>
+      expect(stageTemplatesApi.createStageTemplate).toHaveBeenCalledWith('st1', {
+        name: 'LinkedIn',
+        defaultSector: 'criacao',
+        defaultDurationDays: 1,
+        phaseId: 'ph1',
+      }),
+    );
+  });
+
+  it('groups stages under their Fase heading, with ungrouped stages under Sem fase', async () => {
+    const stagesWithPhase = [
+      { ...stages[0], phaseId: 'ph1' },
+      { ...stages[1], phaseId: undefined },
+    ];
+    vi.spyOn(stageTemplatesApi, 'listStageTemplates').mockResolvedValue(stagesWithPhase);
+    vi.spyOn(phasesApi, 'listPhases').mockResolvedValue(phases);
+
+    renderPage();
+
+    await screen.findByText('Briefing');
+    const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
+    expect(headings).toEqual(['Fase I', 'Sem fase']);
+  });
 });

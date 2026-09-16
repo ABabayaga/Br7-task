@@ -1,22 +1,34 @@
 import { useState, type FormEvent } from 'react';
-import { SECTORS, SECTOR_LABELS, type Sector, type StageTemplate } from '../types.js';
+import { SECTORS, SECTOR_LABELS, type Phase, type Sector, type StageTemplate } from '../types.js';
 
 interface Props {
   initial?: StageTemplate;
+  phases: Phase[];
   onClose: () => void;
-  onSave: (dto: { name: string; defaultSector: Sector; defaultDurationDays: number }) => void;
+  onSave: (dto: {
+    name: string;
+    defaultSector: Sector;
+    defaultDurationDays: number;
+    phaseId: string | null;
+  }) => void;
 }
 
-export function StageTemplateModal({ initial, onClose, onSave }: Props) {
+export function StageTemplateModal({ initial, phases, onClose, onSave }: Props) {
   const [name, setName] = useState(initial?.name ?? '');
   const [defaultSector, setDefaultSector] = useState<Sector>(initial?.defaultSector ?? SECTORS[0]);
   const [defaultDurationDays, setDefaultDurationDays] = useState(
     initial ? String(initial.defaultDurationDays) : '',
   );
+  const [phaseId, setPhaseId] = useState(initial?.phaseId ?? '');
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    onSave({ name, defaultSector, defaultDurationDays: Number(defaultDurationDays) });
+    onSave({
+      name,
+      defaultSector,
+      defaultDurationDays: Number(defaultDurationDays),
+      phaseId: phaseId || null,
+    });
   }
 
   return (
@@ -65,6 +77,24 @@ export function StageTemplateModal({ initial, onClose, onSave }: Props) {
             className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
             required
           />
+        </div>
+        <div>
+          <label htmlFor="stage-phase" className="block text-sm text-gray-600">
+            Fase
+          </label>
+          <select
+            id="stage-phase"
+            value={phaseId}
+            onChange={(e) => setPhaseId(e.target.value)}
+            className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+          >
+            <option value="">Sem fase</option>
+            {phases.map((phase) => (
+              <option key={phase._id} value={phase._id}>
+                {phase.name}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex justify-end gap-2">
           <button type="button" onClick={onClose} className="rounded px-4 py-2 text-gray-600">
