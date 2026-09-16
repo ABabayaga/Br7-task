@@ -7,6 +7,7 @@ import { HomePage } from './pages/HomePage.js';
 import { DashboardPage } from './pages/DashboardPage.js';
 import { ProjectGanttPage } from './pages/ProjectGanttPage.js';
 import { UsersPage } from './pages/UsersPage.js';
+import { ServiceTypesPage } from './pages/ServiceTypesPage.js';
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
               <Route path="/projetos" element={<DashboardPage />} />
               <Route path="/projects/:id" element={<ProjectGanttPage />} />
               <Route path="/usuarios" element={<UsersPage />} />
+              <Route path="/tipos-servico" element={<ServiceTypesPage />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
