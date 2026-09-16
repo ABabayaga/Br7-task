@@ -9,6 +9,7 @@ import { ProjectGanttPage } from './pages/ProjectGanttPage.js';
 import { UsersPage } from './pages/UsersPage.js';
 import { ServiceTypesPage } from './pages/ServiceTypesPage.js';
 import { StageTemplatesPage } from './pages/StageTemplatesPage.js';
+import { ClientsPage } from './pages/ClientsPage.js';
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
               <Route path="/usuarios" element={<UsersPage />} />
               <Route path="/tipos-servico" element={<ServiceTypesPage />} />
               <Route path="/tipos-servico/:serviceTypeId/etapas" element={<StageTemplatesPage />} />
+              <Route path="/clientes" element={<ClientsPage />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
