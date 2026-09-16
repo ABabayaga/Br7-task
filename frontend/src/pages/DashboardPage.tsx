@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { listProjects, createProject, archiveProject } from '../api/projects.js';
+import { listClients } from '../api/clients.js';
+import { listServiceTypes } from '../api/serviceTypes.js';
 import { CreateProjectModal } from '../components/CreateProjectModal.js';
-import type { Project } from '../types.js';
+import type { Client, Project, ServiceType } from '../types.js';
 
 export function DashboardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
   const [showModal, setShowModal] = useState(false);
 
   function refresh() {
@@ -13,8 +17,18 @@ export function DashboardPage() {
   }
 
   useEffect(refresh, []);
+  useEffect(() => {
+    listClients().then((all) => setClients(all.filter((c) => c.active)));
+    listServiceTypes().then((all) => setServiceTypes(all.filter((s) => s.active)));
+  }, []);
 
-  async function handleCreate(dto: { name: string; description?: string }) {
+  async function handleCreate(dto: {
+    name: string;
+    description?: string;
+    clientId: string;
+    serviceTypeId: string;
+    startDate: string;
+  }) {
     await createProject(dto);
     setShowModal(false);
     refresh();
@@ -59,7 +73,12 @@ export function DashboardPage() {
       </ul>
 
       {showModal && (
-        <CreateProjectModal onClose={() => setShowModal(false)} onCreate={handleCreate} />
+        <CreateProjectModal
+          clients={clients}
+          serviceTypes={serviceTypes}
+          onClose={() => setShowModal(false)}
+          onCreate={handleCreate}
+        />
       )}
     </div>
   );
