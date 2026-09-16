@@ -7,6 +7,7 @@ import { ProjectsModule } from './projects/projects.module.js';
 import { TasksModule } from './tasks/tasks.module.js';
 import { UsersModule } from './users/users.module.js';
 import { AuthModule } from './auth/auth.module.js';
+import { ServiceTypesModule } from './service-types/service-types.module.js';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AuthModule } from './auth/auth.module.js';
     }),
     AuthModule,
     UsersModule,
+    ServiceTypesModule,
     ProjectsModule,
     TasksModule,
   ],
