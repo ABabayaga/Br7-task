@@ -5,6 +5,14 @@ import { Task, TaskDocument } from './schemas/task.schema.js';
 import { CreateTaskDto } from './dto/create-task.dto.js';
 import { UpdateTaskDto } from './dto/update-task.dto.js';
 import { wouldCreateCycle } from './dependency-cycle.util.js';
+import { Sector } from '../common/sector.js';
+
+export interface StageTemplateInput {
+  id: string;
+  name: string;
+  defaultSector: Sector;
+  defaultDurationDays: number;
+}
 
 @Injectable()
 export class TasksService {
@@ -62,5 +70,38 @@ export class TasksService {
       { projectId: task.projectId },
       { $pull: { dependencies: task._id } },
     );
+  }
+
+  async generateFromTemplate(
+    projectId: string,
+    startDate: string,
+    stageTemplates: StageTemplateInput[],
+  ): Promise<TaskDocument[]> {
+    const created: TaskDocument[] = [];
+    let cursor = new Date(startDate);
+    let previousTaskId: string | undefined;
+
+    for (const stage of stageTemplates) {
+      const stageStart = new Date(cursor);
+      const stageEnd = new Date(cursor);
+      stageEnd.setDate(stageEnd.getDate() + stage.defaultDurationDays - 1);
+
+      const task = (await this.taskModel.create({
+        name: stage.name,
+        projectId,
+        startDate: stageStart,
+        endDate: stageEnd,
+        setor: stage.defaultSector,
+        sourceStageTemplateId: stage.id,
+        dependencies: previousTaskId ? [previousTaskId] : [],
+      })) as TaskDocument;
+
+      created.push(task);
+      previousTaskId = task._id.toString();
+      cursor = new Date(stageEnd);
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    return created;
   }
 }

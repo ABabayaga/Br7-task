@@ -1,5 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
+import { SECTORS } from '../../common/sector.js';
+import type { Sector } from '../../common/sector.js';
 
 export type TaskStatus = 'todo' | 'in_progress' | 'done';
 export type TaskDocument = HydratedDocument<Task>;
@@ -29,6 +31,12 @@ export class Task {
 
   @Prop({ type: String, required: true, enum: ['todo', 'in_progress', 'done'], default: 'todo' })
   status: TaskStatus;
+
+  @Prop({ type: String, enum: SECTORS })
+  setor?: Sector;
+
+  @Prop({ type: Types.ObjectId, ref: 'StageTemplate' })
+  sourceStageTemplateId?: Types.ObjectId;
 }
 
 export const TaskSchema = SchemaFactory.createForClass(Task);

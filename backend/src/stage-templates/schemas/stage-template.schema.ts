@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import { SECTORS, Sector } from '../../common/sector.js';
+import { SECTORS } from '../../common/sector.js';
+import type { Sector } from '../../common/sector.js';
 
 export type StageTemplateDocument = HydratedDocument<StageTemplate>;
 

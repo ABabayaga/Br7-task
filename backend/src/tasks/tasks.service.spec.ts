@@ -36,4 +36,37 @@ describe('TasksService', () => {
       BadRequestException,
     );
   });
+
+  it('generates chained tasks from stage templates starting on the given date', async () => {
+    modelMock.create
+      .mockResolvedValueOnce({ _id: 'task-1', name: 'Briefing' })
+      .mockResolvedValueOnce({ _id: 'task-2', name: 'Cronograma' });
+
+    const stages = [
+      { id: 'stage-1', name: 'Briefing', defaultSector: 'diretoria_criacao' as const, defaultDurationDays: 2 },
+      { id: 'stage-2', name: 'Cronograma', defaultSector: 'criacao' as const, defaultDurationDays: 3 },
+    ];
+
+    const created = await service.generateFromTemplate('project-1', '2026-01-01', stages);
+
+    expect(modelMock.create).toHaveBeenNthCalledWith(1, {
+      name: 'Briefing',
+      projectId: 'project-1',
+      startDate: new Date('2026-01-01'),
+      endDate: new Date('2026-01-02'),
+      setor: 'diretoria_criacao',
+      sourceStageTemplateId: 'stage-1',
+      dependencies: [],
+    });
+    expect(modelMock.create).toHaveBeenNthCalledWith(2, {
+      name: 'Cronograma',
+      projectId: 'project-1',
+      startDate: new Date('2026-01-03'),
+      endDate: new Date('2026-01-05'),
+      setor: 'criacao',
+      sourceStageTemplateId: 'stage-2',
+      dependencies: ['task-1'],
+    });
+    expect(created).toHaveLength(2);
+  });
 });

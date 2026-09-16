@@ -1,5 +1,6 @@
 import { IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
-import { SECTORS, Sector } from '../../common/sector.js';
+import { SECTORS } from '../../common/sector.js';
+import type { Sector } from '../../common/sector.js';
 
 export class CreateStageTemplateDto {
   @IsString()

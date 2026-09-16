@@ -8,5 +8,6 @@ import { Task, TaskSchema } from './schemas/task.schema.js';
   imports: [MongooseModule.forFeature([{ name: Task.name, schema: TaskSchema }])],
   providers: [TasksService],
   controllers: [TasksController],
+  exports: [TasksService],
 })
 export class TasksModule {}
