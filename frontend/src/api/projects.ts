@@ -5,7 +5,13 @@ export function listProjects() {
   return apiClient.get<Project[]>('/projects').then((res) => res.data);
 }
 
-export function createProject(dto: { name: string; description?: string }) {
+export function createProject(dto: {
+  name: string;
+  description?: string;
+  clientId: string;
+  serviceTypeId: string;
+  startDate: string;
+}) {
   return apiClient.post<Project>('/projects', dto).then((res) => res.data);
 }
 
