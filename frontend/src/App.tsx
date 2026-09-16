@@ -10,6 +10,7 @@ import { UsersPage } from './pages/UsersPage.js';
 import { ServiceTypesPage } from './pages/ServiceTypesPage.js';
 import { StageTemplatesPage } from './pages/StageTemplatesPage.js';
 import { ClientsPage } from './pages/ClientsPage.js';
+import { ClientOverridesPage } from './pages/ClientOverridesPage.js';
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
               <Route path="/tipos-servico" element={<ServiceTypesPage />} />
               <Route path="/tipos-servico/:serviceTypeId/etapas" element={<StageTemplatesPage />} />
               <Route path="/clientes" element={<ClientsPage />} />
+              <Route path="/clientes/:clientId" element={<ClientOverridesPage />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
