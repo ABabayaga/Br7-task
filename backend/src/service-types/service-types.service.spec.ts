@@ -9,6 +9,7 @@ describe('ServiceTypesService', () => {
   const modelMock = {
     create: vi.fn(),
     find: vi.fn(),
+    findOne: vi.fn(),
     findById: vi.fn(),
     findByIdAndUpdate: vi.fn(),
   };
@@ -51,5 +52,13 @@ describe('ServiceTypesService', () => {
     modelMock.findById.mockResolvedValue(doc);
 
     await expect(service.assertActive('1')).resolves.toBe(doc);
+  });
+
+  it('findByName delegates to the model', async () => {
+    const doc = { _id: '1', name: 'Social Media' };
+    modelMock.findOne.mockResolvedValue(doc);
+
+    await expect(service.findByName('Social Media')).resolves.toBe(doc);
+    expect(modelMock.findOne).toHaveBeenCalledWith({ name: 'Social Media' });
   });
 });

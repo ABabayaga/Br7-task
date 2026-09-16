@@ -19,6 +19,10 @@ export class ServiceTypesService {
     return this.serviceTypeModel.find() as Promise<ServiceTypeDocument[]>;
   }
 
+  findByName(name: string): Promise<ServiceTypeDocument | null> {
+    return this.serviceTypeModel.findOne({ name }) as Promise<ServiceTypeDocument | null>;
+  }
+
   async update(id: string, dto: UpdateServiceTypeDto): Promise<ServiceTypeDocument> {
     const updated = (await this.serviceTypeModel.findByIdAndUpdate(id, dto, {
       returnDocument: 'after',

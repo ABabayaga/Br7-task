@@ -28,10 +28,12 @@ describe('StageTemplates (e2e)', () => {
       .send({ email: 'admin@br7.com', password: 'test-admin-password' });
     token = login.body.accessToken;
 
+    // A name distinct from the 5 flows SeedServiceTemplatesService creates
+    // on every app boot.
     const serviceType = await request(app.getHttpServer())
       .post('/service-types')
       .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'Social Media' });
+      .send({ name: `Social Media Ads ${Date.now()}-${Math.random()}` });
     serviceTypeId = serviceType.body._id;
   });
 

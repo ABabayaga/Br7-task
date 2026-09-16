@@ -1,6 +1,7 @@
 import { IsEmail, IsIn, IsOptional, IsString, MinLength } from 'class-validator';
 import type { UserRole } from '../schemas/user.schema.js';
-import { SECTORS, Sector } from '../../common/sector.js';
+import { SECTORS } from '../../common/sector.js';
+import type { Sector } from '../../common/sector.js';
 
 export class CreateUserDto {
   @IsString()

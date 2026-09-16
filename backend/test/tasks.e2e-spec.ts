@@ -32,10 +32,12 @@ describe('Tasks (e2e)', () => {
       .post('/clients')
       .set('Authorization', `Bearer ${token}`)
       .send({ name: 'Cliente Teste' });
+    // A name distinct from the 5 flows SeedServiceTemplatesService creates
+    // on every app boot.
     const serviceType = await request(app.getHttpServer())
       .post('/service-types')
       .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'Site' });
+      .send({ name: `Site Institucional ${Date.now()}-${Math.random()}` });
 
     const project = await request(app.getHttpServer())
       .post('/projects')

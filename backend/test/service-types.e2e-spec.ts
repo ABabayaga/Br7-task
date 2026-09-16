@@ -37,10 +37,13 @@ describe('ServiceTypes (e2e)', () => {
   });
 
   it('creates, lists and deactivates a service type', async () => {
+    // A name distinct from the 5 flows SeedServiceTemplatesService creates
+    // on every app boot — the collection is never empty here.
+    const name = `Social Media Ads ${Date.now()}-${Math.random()}`;
     const created = await request(app.getHttpServer())
       .post('/service-types')
       .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'Social Media' })
+      .send({ name })
       .expect(201);
     expect(created.body.active).toBe(true);
 
@@ -48,7 +51,7 @@ describe('ServiceTypes (e2e)', () => {
       .get('/service-types')
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
-    expect(list.body).toHaveLength(1);
+    expect(list.body.map((s: { name: string }) => s.name)).toContain(name);
 
     const deactivated = await request(app.getHttpServer())
       .patch(`/service-types/${created.body._id}`)

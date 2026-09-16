@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { ServiceTypesModule } from './service-types/service-types.module.js';
 import { StageTemplatesModule } from './stage-templates/stage-templates.module.js';
 import { ClientsModule } from './clients/clients.module.js';
+import { SeedServiceTemplatesService } from './service-types/seed-service-templates.service.js';
 
 @Module({
   imports: [
@@ -29,6 +30,6 @@ import { ClientsModule } from './clients/clients.module.js';
     TasksModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, SeedServiceTemplatesService],
 })
 export class AppModule {}
