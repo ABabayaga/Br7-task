@@ -113,4 +113,51 @@ describe('Project creation generates tasks from template (e2e)', () => {
       })
       .expect(400);
   });
+
+  it('excludes an archived stage from a newly created project', async () => {
+    const serviceType = await request(app.getHttpServer())
+      .post('/service-types')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: `Social Media ${Date.now()}-${Math.random()}` });
+    const serviceTypeId = serviceType.body._id;
+
+    await request(app.getHttpServer())
+      .post(`/service-types/${serviceTypeId}/stage-templates`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Briefing', defaultSector: 'diretoria_criacao', defaultDurationDays: 2 });
+    const stage2 = await request(app.getHttpServer())
+      .post(`/service-types/${serviceTypeId}/stage-templates`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Facebook', defaultSector: 'criacao', defaultDurationDays: 1 });
+
+    await request(app.getHttpServer())
+      .patch(`/stage-templates/${stage2.body._id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ active: false })
+      .expect(200);
+
+    const client = await request(app.getHttpServer())
+      .post('/clients')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Cliente Arquivamento' });
+
+    const project = await request(app.getHttpServer())
+      .post('/projects')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Campanha Arquivada',
+        clientId: client.body._id,
+        serviceTypeId,
+        startDate: '2026-01-01',
+      })
+      .expect(201);
+
+    const tasks = await request(app.getHttpServer())
+      .get(`/projects/${project.body._id}/tasks`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(tasks.body).toHaveLength(1);
+    expect(tasks.body[0].name).toBe('Briefing');
+  });
 });

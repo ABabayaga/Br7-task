@@ -45,8 +45,8 @@ describe('ProjectsService', () => {
     serviceTypesServiceMock.assertActive.mockResolvedValue({ _id: 'st1', active: true });
     modelMock.create.mockResolvedValue({ _id: 'p1' });
     stageTemplatesServiceMock.findAllForServiceType.mockResolvedValue([
-      { _id: { toString: () => 's1' }, name: 'Briefing', defaultSector: 'criacao', defaultDurationDays: 2 },
-      { _id: { toString: () => 's2' }, name: 'Facebook', defaultSector: 'criacao', defaultDurationDays: 1 },
+      { _id: { toString: () => 's1' }, name: 'Briefing', defaultSector: 'criacao', defaultDurationDays: 2, active: true },
+      { _id: { toString: () => 's2' }, name: 'Facebook', defaultSector: 'criacao', defaultDurationDays: 1, active: true },
     ]);
     clientsServiceMock.getDisabledStageTemplateIds.mockResolvedValue(['s2']);
 
@@ -65,7 +65,7 @@ describe('ProjectsService', () => {
     serviceTypesServiceMock.assertActive.mockResolvedValue({ _id: 'st1', active: true });
     modelMock.create.mockResolvedValue({ _id: 'p1' });
     stageTemplatesServiceMock.findAllForServiceType.mockResolvedValue([
-      { _id: { toString: () => 's1' }, name: 'Briefing', defaultSector: 'criacao', defaultDurationDays: 2 },
+      { _id: { toString: () => 's1' }, name: 'Briefing', defaultSector: 'criacao', defaultDurationDays: 2, active: true },
     ]);
     clientsServiceMock.getDisabledStageTemplateIds.mockResolvedValue(['s1']);
 
@@ -82,7 +82,7 @@ describe('ProjectsService', () => {
     serviceTypesServiceMock.assertActive.mockResolvedValue({ _id: 'st1', active: true });
     modelMock.create.mockResolvedValue({ _id: 'p1' });
     stageTemplatesServiceMock.findAllForServiceType.mockResolvedValue([
-      { _id: { toString: () => 's1' }, name: 'Briefing', defaultSector: 'criacao', defaultDurationDays: 2 },
+      { _id: { toString: () => 's1' }, name: 'Briefing', defaultSector: 'criacao', defaultDurationDays: 2, active: true },
     ]);
     clientsServiceMock.getDisabledStageTemplateIds.mockResolvedValue([]);
     tasksServiceMock.generateFromTemplate.mockRejectedValue(new Error('boom'));
@@ -94,6 +94,27 @@ describe('ProjectsService', () => {
       ),
     ).rejects.toThrow('boom');
     expect(modelMock.findByIdAndDelete).toHaveBeenCalledWith('p1');
+  });
+
+  it('excludes archived stages from generation even when not disabled by the client', async () => {
+    clientsServiceMock.assertActive.mockResolvedValue({ _id: 'c1', active: true });
+    serviceTypesServiceMock.assertActive.mockResolvedValue({ _id: 'st1', active: true });
+    modelMock.create.mockResolvedValue({ _id: 'p1' });
+    tasksServiceMock.generateFromTemplate.mockResolvedValue([]);
+    stageTemplatesServiceMock.findAllForServiceType.mockResolvedValue([
+      { _id: { toString: () => 's1' }, name: 'Briefing', defaultSector: 'criacao', defaultDurationDays: 2, active: true },
+      { _id: { toString: () => 's2' }, name: 'Facebook', defaultSector: 'criacao', defaultDurationDays: 1, active: false },
+    ]);
+    clientsServiceMock.getDisabledStageTemplateIds.mockResolvedValue([]);
+
+    await service.create(
+      { name: 'Campanha X', clientId: 'c1', serviceTypeId: 'st1', startDate: '2026-01-01' },
+      'user-1',
+    );
+
+    expect(tasksServiceMock.generateFromTemplate).toHaveBeenCalledWith('p1', '2026-01-01', [
+      { id: 's1', name: 'Briefing', defaultSector: 'criacao', defaultDurationDays: 2 },
+    ]);
   });
 
   it('throws NotFoundException when the project does not exist', async () => {

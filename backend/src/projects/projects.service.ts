@@ -41,6 +41,7 @@ export class ProjectsService {
         dto.serviceTypeId,
       );
       const activeStages = stageTemplates
+        .filter((stage) => stage.active)
         .filter((stage) => !disabledIds.includes(stage._id.toString()))
         .map((stage) => ({
           id: stage._id.toString(),
