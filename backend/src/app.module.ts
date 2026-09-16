@@ -8,6 +8,7 @@ import { TasksModule } from './tasks/tasks.module.js';
 import { UsersModule } from './users/users.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { ServiceTypesModule } from './service-types/service-types.module.js';
+import { StageTemplatesModule } from './stage-templates/stage-templates.module.js';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ServiceTypesModule } from './service-types/service-types.module.js';
     AuthModule,
     UsersModule,
     ServiceTypesModule,
+    StageTemplatesModule,
     ProjectsModule,
     TasksModule,
   ],
