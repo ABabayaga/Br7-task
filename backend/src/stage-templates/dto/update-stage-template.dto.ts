@@ -1,4 +1,4 @@
-import { IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { SECTORS } from '../../common/sector.js';
 import type { Sector } from '../../common/sector.js';
 
@@ -15,4 +15,12 @@ export class UpdateStageTemplateDto {
   @IsInt()
   @Min(1)
   defaultDurationDays?: number;
+
+  @IsOptional()
+  @IsString()
+  phaseId?: string | null;
+
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean;
 }

@@ -17,4 +17,8 @@ export class CreateStageTemplateDto {
   @IsInt()
   @Min(0)
   order?: number;
+
+  @IsOptional()
+  @IsString()
+  phaseId?: string;
 }

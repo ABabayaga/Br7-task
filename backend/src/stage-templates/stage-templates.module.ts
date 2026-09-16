@@ -3,11 +3,15 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { StageTemplatesService } from './stage-templates.service.js';
 import { StageTemplatesController } from './stage-templates.controller.js';
 import { StageTemplate, StageTemplateSchema } from './schemas/stage-template.schema.js';
+import { Phase, PhaseSchema } from '../phases/schemas/phase.schema.js';
 import { ServiceTypesModule } from '../service-types/service-types.module.js';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: StageTemplate.name, schema: StageTemplateSchema }]),
+    MongooseModule.forFeature([
+      { name: StageTemplate.name, schema: StageTemplateSchema },
+      { name: Phase.name, schema: PhaseSchema },
+    ]),
     ServiceTypesModule,
   ],
   providers: [StageTemplatesService],

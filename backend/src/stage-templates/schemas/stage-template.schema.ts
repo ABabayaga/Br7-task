@@ -21,6 +21,12 @@ export class StageTemplate {
 
   @Prop({ required: true, min: 1 })
   defaultDurationDays: number;
+
+  @Prop({ type: Types.ObjectId, ref: 'Phase' })
+  phaseId?: Types.ObjectId;
+
+  @Prop({ type: Boolean, required: true, default: true })
+  active: boolean;
 }
 
 export const StageTemplateSchema = SchemaFactory.createForClass(StageTemplate);

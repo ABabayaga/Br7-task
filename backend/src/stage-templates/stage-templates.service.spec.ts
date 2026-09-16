@@ -10,11 +10,13 @@ describe('StageTemplatesService', () => {
   const modelMock = {
     create: vi.fn(),
     find: vi.fn(),
+    findById: vi.fn(),
     countDocuments: vi.fn(),
     findByIdAndUpdate: vi.fn(),
     findByIdAndDelete: vi.fn(),
     updateOne: vi.fn(),
   };
+  const phaseModelMock = { findById: vi.fn() };
   const serviceTypesServiceMock = { assertActive: vi.fn() };
 
   beforeEach(async () => {
@@ -23,6 +25,7 @@ describe('StageTemplatesService', () => {
       providers: [
         StageTemplatesService,
         { provide: getModelToken(StageTemplate.name), useValue: modelMock },
+        { provide: getModelToken('Phase'), useValue: phaseModelMock },
         { provide: ServiceTypesService, useValue: serviceTypesServiceMock },
       ],
     }).compile();
@@ -46,7 +49,74 @@ describe('StageTemplatesService', () => {
       name: 'Briefing',
       defaultSector: 'criacao',
       defaultDurationDays: 3,
+      phaseId: undefined,
     });
+  });
+
+  it('rejects creating a stage with a phaseId from another service type', async () => {
+    serviceTypesServiceMock.assertActive.mockResolvedValue({ _id: 'st1', active: true });
+    phaseModelMock.findById.mockReturnValue({
+      lean: vi.fn().mockResolvedValue({ _id: 'phase-1', serviceTypeId: 'st2' }),
+    });
+
+    await expect(
+      service.create('st1', {
+        name: 'Briefing',
+        defaultSector: 'criacao',
+        defaultDurationDays: 1,
+        phaseId: 'phase-1',
+      }),
+    ).rejects.toThrow(BadRequestException);
+    expect(modelMock.create).not.toHaveBeenCalled();
+  });
+
+  it('creates a stage with a phaseId that belongs to the same service type', async () => {
+    serviceTypesServiceMock.assertActive.mockResolvedValue({ _id: 'st1', active: true });
+    phaseModelMock.findById.mockReturnValue({
+      lean: vi.fn().mockResolvedValue({ _id: 'phase-1', serviceTypeId: 'st1' }),
+    });
+    modelMock.countDocuments.mockResolvedValue(0);
+    modelMock.create.mockResolvedValue({ _id: 'stage-1' });
+
+    await service.create('st1', {
+      name: 'Briefing',
+      defaultSector: 'criacao',
+      defaultDurationDays: 1,
+      phaseId: 'phase-1',
+    });
+
+    expect(modelMock.create).toHaveBeenCalledWith({
+      serviceTypeId: 'st1',
+      order: 0,
+      name: 'Briefing',
+      defaultSector: 'criacao',
+      defaultDurationDays: 1,
+      phaseId: 'phase-1',
+    });
+  });
+
+  it('rejects updating a stage with a phaseId from another service type', async () => {
+    modelMock.findById.mockResolvedValue({ _id: 'stage-1', serviceTypeId: 'st1' });
+    phaseModelMock.findById.mockReturnValue({
+      lean: vi.fn().mockResolvedValue({ _id: 'phase-1', serviceTypeId: 'st2' }),
+    });
+
+    await expect(service.update('stage-1', { phaseId: 'phase-1' })).rejects.toThrow(
+      BadRequestException,
+    );
+    expect(modelMock.findByIdAndUpdate).not.toHaveBeenCalled();
+  });
+
+  it('allows clearing a stage phaseId by sending null', async () => {
+    modelMock.findByIdAndUpdate.mockResolvedValue({ _id: 'stage-1', phaseId: undefined });
+
+    await service.update('stage-1', { phaseId: null });
+
+    expect(modelMock.findByIdAndUpdate).toHaveBeenCalledWith(
+      'stage-1',
+      { phaseId: null },
+      { returnDocument: 'after' },
+    );
   });
 
   it('throws NotFoundException when updating a missing stage template', async () => {
