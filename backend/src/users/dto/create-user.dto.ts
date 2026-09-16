@@ -1,5 +1,6 @@
 import { IsEmail, IsIn, IsOptional, IsString, MinLength } from 'class-validator';
 import type { UserRole } from '../schemas/user.schema.js';
+import { SECTORS, Sector } from '../../common/sector.js';
 
 export class CreateUserDto {
   @IsString()
@@ -15,4 +16,8 @@ export class CreateUserDto {
   @IsOptional()
   @IsIn(['admin', 'member'])
   role?: UserRole;
+
+  @IsOptional()
+  @IsIn(SECTORS)
+  setor?: Sector;
 }

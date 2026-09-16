@@ -15,6 +15,7 @@ export class UsersService {
       name: dto.name,
       email: dto.email,
       role: dto.role ?? 'member',
+      setor: dto.setor,
       passwordHash,
     });
   }
