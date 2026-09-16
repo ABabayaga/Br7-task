@@ -9,6 +9,7 @@ import { UsersModule } from './users/users.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { ServiceTypesModule } from './service-types/service-types.module.js';
 import { StageTemplatesModule } from './stage-templates/stage-templates.module.js';
+import { PhasesModule } from './phases/phases.module.js';
 import { ClientsModule } from './clients/clients.module.js';
 import { SeedServiceTemplatesService } from './service-types/seed-service-templates.service.js';
 
@@ -25,6 +26,7 @@ import { SeedServiceTemplatesService } from './service-types/seed-service-templa
     UsersModule,
     ServiceTypesModule,
     StageTemplatesModule,
+    PhasesModule,
     ClientsModule,
     ProjectsModule,
     TasksModule,
