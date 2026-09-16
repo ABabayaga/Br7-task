@@ -17,6 +17,15 @@ export class Project {
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   createdBy: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'Client', required: true })
+  clientId: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'ServiceType', required: true })
+  serviceTypeId: Types.ObjectId;
+
+  @Prop({ required: true })
+  startDate: Date;
 }
 
 export const ProjectSchema = SchemaFactory.createForClass(Project);

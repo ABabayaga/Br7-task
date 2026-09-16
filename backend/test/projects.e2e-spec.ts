@@ -9,6 +9,8 @@ describe('Projects (e2e)', () => {
   let app: INestApplication<App>;
   let stopDb: () => Promise<void>;
   let token: string;
+  let clientId: string;
+  let serviceTypeId: string;
 
   beforeAll(async () => {
     ({ stop: stopDb } = await startTestDb());
@@ -26,6 +28,21 @@ describe('Projects (e2e)', () => {
       .post('/auth/login')
       .send({ email: 'admin@br7.com', password: 'test-admin-password' });
     token = login.body.accessToken;
+
+    const client = await request(app.getHttpServer())
+      .post('/clients')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Cliente Teste' });
+    clientId = client.body._id;
+
+    // Unique per beforeEach run: ServiceType.name is globally unique and
+    // the in-memory Mongo instance persists across the two `it` blocks
+    // in this file, so a fixed name would collide on the second run.
+    const serviceType = await request(app.getHttpServer())
+      .post('/service-types')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: `Site ${Date.now()}-${Math.random()}` });
+    serviceTypeId = serviceType.body._id;
   });
 
   afterEach(async () => {
@@ -44,7 +61,13 @@ describe('Projects (e2e)', () => {
     const created = await request(app.getHttpServer())
       .post('/projects')
       .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'Campanha X', description: 'Lançamento Q4' })
+      .send({
+        name: 'Campanha X',
+        description: 'Lançamento Q4',
+        clientId,
+        serviceTypeId,
+        startDate: '2026-01-01',
+      })
       .expect(201);
     const id = created.body._id;
     expect(created.body.name).toBe('Campanha X');

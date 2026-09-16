@@ -28,10 +28,24 @@ describe('Tasks (e2e)', () => {
       .send({ email: 'admin@br7.com', password: 'test-admin-password' });
     token = login.body.accessToken;
 
+    const client = await request(app.getHttpServer())
+      .post('/clients')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Cliente Teste' });
+    const serviceType = await request(app.getHttpServer())
+      .post('/service-types')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Site' });
+
     const project = await request(app.getHttpServer())
       .post('/projects')
       .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'Campanha X' });
+      .send({
+        name: 'Campanha X',
+        clientId: client.body._id,
+        serviceTypeId: serviceType.body._id,
+        startDate: '2026-01-01',
+      });
     projectId = project.body._id;
   });
 

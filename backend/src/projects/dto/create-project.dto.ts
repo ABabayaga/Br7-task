@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsOptional, IsString } from 'class-validator';
 
 export class CreateProjectDto {
   @IsString()
@@ -7,4 +7,13 @@ export class CreateProjectDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @IsString()
+  clientId: string;
+
+  @IsString()
+  serviceTypeId: string;
+
+  @IsDateString()
+  startDate: string;
 }

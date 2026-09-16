@@ -3,6 +3,10 @@ import { getModelToken } from '@nestjs/mongoose';
 import { NotFoundException } from '@nestjs/common';
 import { ProjectsService } from './projects.service.js';
 import { Project } from './schemas/project.schema.js';
+import { ClientsService } from '../clients/clients.service.js';
+import { ServiceTypesService } from '../service-types/service-types.service.js';
+import { StageTemplatesService } from '../stage-templates/stage-templates.service.js';
+import { TasksService } from '../tasks/tasks.service.js';
 
 describe('ProjectsService', () => {
   let service: ProjectsService;
@@ -13,6 +17,13 @@ describe('ProjectsService', () => {
     findByIdAndUpdate: vi.fn(),
     findByIdAndDelete: vi.fn(),
   };
+  const clientsServiceMock = {
+    assertActive: vi.fn(),
+    getDisabledStageTemplateIds: vi.fn(),
+  };
+  const serviceTypesServiceMock = { assertActive: vi.fn() };
+  const stageTemplatesServiceMock = { findAllForServiceType: vi.fn() };
+  const tasksServiceMock = { generateFromTemplate: vi.fn() };
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -20,21 +31,69 @@ describe('ProjectsService', () => {
       providers: [
         ProjectsService,
         { provide: getModelToken(Project.name), useValue: modelMock },
+        { provide: ClientsService, useValue: clientsServiceMock },
+        { provide: ServiceTypesService, useValue: serviceTypesServiceMock },
+        { provide: StageTemplatesService, useValue: stageTemplatesServiceMock },
+        { provide: TasksService, useValue: tasksServiceMock },
       ],
     }).compile();
     service = moduleRef.get(ProjectsService);
   });
 
-  it('creates a project with createdBy set', async () => {
-    modelMock.create.mockResolvedValue({ _id: '1', name: 'Campanha X' });
+  it('creates a project and generates tasks from the active, non-disabled stages', async () => {
+    clientsServiceMock.assertActive.mockResolvedValue({ _id: 'c1', active: true });
+    serviceTypesServiceMock.assertActive.mockResolvedValue({ _id: 'st1', active: true });
+    modelMock.create.mockResolvedValue({ _id: 'p1' });
+    stageTemplatesServiceMock.findAllForServiceType.mockResolvedValue([
+      { _id: { toString: () => 's1' }, name: 'Briefing', defaultSector: 'criacao', defaultDurationDays: 2 },
+      { _id: { toString: () => 's2' }, name: 'Facebook', defaultSector: 'criacao', defaultDurationDays: 1 },
+    ]);
+    clientsServiceMock.getDisabledStageTemplateIds.mockResolvedValue(['s2']);
 
-    await service.create({ name: 'Campanha X' }, 'user-1');
+    await service.create(
+      { name: 'Campanha X', clientId: 'c1', serviceTypeId: 'st1', startDate: '2026-01-01' },
+      'user-1',
+    );
 
-    expect(modelMock.create).toHaveBeenCalledWith({
-      name: 'Campanha X',
-      description: undefined,
-      createdBy: 'user-1',
-    });
+    expect(tasksServiceMock.generateFromTemplate).toHaveBeenCalledWith('p1', '2026-01-01', [
+      { id: 's1', name: 'Briefing', defaultSector: 'criacao', defaultDurationDays: 2 },
+    ]);
+  });
+
+  it('skips task generation and does not error when every stage is disabled', async () => {
+    clientsServiceMock.assertActive.mockResolvedValue({ _id: 'c1', active: true });
+    serviceTypesServiceMock.assertActive.mockResolvedValue({ _id: 'st1', active: true });
+    modelMock.create.mockResolvedValue({ _id: 'p1' });
+    stageTemplatesServiceMock.findAllForServiceType.mockResolvedValue([
+      { _id: { toString: () => 's1' }, name: 'Briefing', defaultSector: 'criacao', defaultDurationDays: 2 },
+    ]);
+    clientsServiceMock.getDisabledStageTemplateIds.mockResolvedValue(['s1']);
+
+    await service.create(
+      { name: 'Campanha X', clientId: 'c1', serviceTypeId: 'st1', startDate: '2026-01-01' },
+      'user-1',
+    );
+
+    expect(tasksServiceMock.generateFromTemplate).not.toHaveBeenCalled();
+  });
+
+  it('rolls back the project when task generation fails', async () => {
+    clientsServiceMock.assertActive.mockResolvedValue({ _id: 'c1', active: true });
+    serviceTypesServiceMock.assertActive.mockResolvedValue({ _id: 'st1', active: true });
+    modelMock.create.mockResolvedValue({ _id: 'p1' });
+    stageTemplatesServiceMock.findAllForServiceType.mockResolvedValue([
+      { _id: { toString: () => 's1' }, name: 'Briefing', defaultSector: 'criacao', defaultDurationDays: 2 },
+    ]);
+    clientsServiceMock.getDisabledStageTemplateIds.mockResolvedValue([]);
+    tasksServiceMock.generateFromTemplate.mockRejectedValue(new Error('boom'));
+
+    await expect(
+      service.create(
+        { name: 'Campanha X', clientId: 'c1', serviceTypeId: 'st1', startDate: '2026-01-01' },
+        'user-1',
+      ),
+    ).rejects.toThrow('boom');
+    expect(modelMock.findByIdAndDelete).toHaveBeenCalledWith('p1');
   });
 
   it('throws NotFoundException when the project does not exist', async () => {
