@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { computeWeekColumns, isTaskActiveInWeek } from './computeWeekColumns.js';
+import {
+  computeWeekColumns,
+  isTaskActiveInWeek,
+  getWeekOptions,
+  toDateInputValue,
+} from './computeWeekColumns.js';
 
 describe('computeWeekColumns', () => {
   it('returns no columns when there are no tasks', () => {
@@ -65,5 +70,32 @@ describe('isTaskActiveInWeek', () => {
   it('is true when the task starts exactly on the week end (inclusive boundary)', () => {
     const task = { startDate: '2026-01-07', endDate: '2026-01-09' };
     expect(isTaskActiveInWeek(task, week)).toBe(true);
+  });
+});
+
+describe('getWeekOptions', () => {
+  it('falls back to a single week starting at fallbackStart when there are no tasks', () => {
+    const options = getWeekOptions([], new Date('2026-01-01'));
+
+    expect(options).toEqual([
+      { label: 'Sem 1', start: new Date('2026-01-01'), end: new Date('2026-01-07') },
+    ]);
+  });
+
+  it('appends one trailing week after the tasks-derived range', () => {
+    const tasks = [{ startDate: '2026-01-01', endDate: '2026-01-05' }];
+
+    const options = getWeekOptions(tasks, new Date('2026-01-01'));
+
+    expect(options).toEqual([
+      { label: 'Sem 1', start: new Date('2026-01-01'), end: new Date('2026-01-07') },
+      { label: 'Sem 2', start: new Date('2026-01-08'), end: new Date('2026-01-14') },
+    ]);
+  });
+});
+
+describe('toDateInputValue', () => {
+  it('formats a date as YYYY-MM-DD', () => {
+    expect(toDateInputValue(new Date('2026-01-08'))).toBe('2026-01-08');
   });
 });

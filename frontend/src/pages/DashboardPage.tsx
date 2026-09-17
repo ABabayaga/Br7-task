@@ -18,7 +18,7 @@ export function DashboardPage() {
 
   useEffect(refresh, []);
   useEffect(() => {
-    listClients().then((all) => setClients(all.filter((c) => c.active)));
+    listClients().then(setClients);
     listServiceTypes().then((all) => setServiceTypes(all.filter((s) => s.active)));
   }, []);
 
@@ -26,10 +26,23 @@ export function DashboardPage() {
     name: string;
     description?: string;
     clientId: string;
-    serviceTypeId: string;
+    serviceTypeIds: string[];
+    noTemplate: boolean;
     startDate: string;
   }) {
-    await createProject(dto);
+    const { serviceTypeIds, noTemplate, ...rest } = dto;
+    if (noTemplate) {
+      await createProject(rest);
+    } else {
+      const multiple = serviceTypeIds.length > 1;
+      await Promise.all(
+        serviceTypeIds.map((serviceTypeId) => {
+          const serviceTypeName = serviceTypes.find((s) => s._id === serviceTypeId)?.name;
+          const name = multiple && serviceTypeName ? `${rest.name} - ${serviceTypeName}` : rest.name;
+          return createProject({ ...rest, name, serviceTypeId });
+        }),
+      );
+    }
     setShowModal(false);
     refresh();
   }
@@ -38,6 +51,17 @@ export function DashboardPage() {
     await archiveProject(id);
     refresh();
   }
+
+  const clientById = new Map(clients.map((client) => [client._id, client]));
+  const projectsByClient = new Map<string, Project[]>();
+  for (const project of projects) {
+    const group = projectsByClient.get(project.clientId) ?? [];
+    group.push(project);
+    projectsByClient.set(project.clientId, group);
+  }
+  const groups = [...projectsByClient.entries()].sort(([a], [b]) =>
+    (clientById.get(a)?.name ?? '').localeCompare(clientById.get(b)?.name ?? ''),
+  );
 
   return (
     <div className="mx-auto max-w-3xl p-8">
@@ -51,30 +75,39 @@ export function DashboardPage() {
         </button>
       </div>
 
-      <ul className="space-y-3">
-        {projects.map((project) => (
-          <li
-            key={project._id}
-            className="flex items-center justify-between rounded border border-gray-200 bg-white p-4 shadow-sm"
-          >
-            <Link to={`/projects/${project._id}`} className="font-medium text-[#E0176A] hover:underline">
-              {project.name}
-            </Link>
-            <div className="flex items-center gap-3">
-              <span className="text-xs uppercase text-gray-500">{project.status}</span>
-              {project.status === 'active' && (
-                <button onClick={() => handleArchive(project._id)} className="text-sm text-gray-500 hover:text-gray-800">
-                  Arquivar
-                </button>
-              )}
-            </div>
-          </li>
+      <div className="space-y-6">
+        {groups.map(([clientId, clientProjects]) => (
+          <section key={clientId}>
+            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
+              {clientById.get(clientId)?.name ?? 'Sem cliente'}
+            </h2>
+            <ul className="space-y-3">
+              {clientProjects.map((project) => (
+                <li
+                  key={project._id}
+                  className="flex items-center justify-between rounded border border-gray-200 bg-white p-4 shadow-sm"
+                >
+                  <Link to={`/projects/${project._id}`} className="font-medium text-[#E0176A] hover:underline">
+                    {project.name}
+                  </Link>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs uppercase text-gray-500">{project.status}</span>
+                    {project.status === 'active' && (
+                      <button onClick={() => handleArchive(project._id)} className="text-sm text-gray-500 hover:text-gray-800">
+                        Arquivar
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
         ))}
-      </ul>
+      </div>
 
       {showModal && (
         <CreateProjectModal
-          clients={clients}
+          clients={clients.filter((c) => c.active)}
           serviceTypes={serviceTypes}
           onClose={() => setShowModal(false)}
           onCreate={handleCreate}

@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { listUsers } from '../api/users.js';
+import { getWeekOptions, toDateInputValue } from '../gantt/computeWeekColumns.js';
 import type { Task, TaskStatus, User } from '../types.js';
 
 interface Props {
@@ -16,6 +17,10 @@ export function TaskEditModal({ task, otherTasks, onClose, onSave, onDelete }: P
   const [assigneeId, setAssigneeId] = useState(task.assigneeId ?? '');
   const [status, setStatus] = useState<TaskStatus>(task.status);
   const [dependencies, setDependencies] = useState<string[]>(task.dependencies);
+  const [startDate, setStartDate] = useState(task.startDate);
+  const [endDate, setEndDate] = useState(task.endDate);
+
+  const weekOptions = getWeekOptions([...otherTasks, task], new Date(task.startDate));
 
   useEffect(() => {
     listUsers().then(setUsers);
@@ -27,9 +32,17 @@ export function TaskEditModal({ task, otherTasks, onClose, onSave, onDelete }: P
     );
   }
 
+  function applyWeek(e: React.ChangeEvent<HTMLSelectElement>) {
+    const week = weekOptions[Number(e.target.value)];
+    if (!week) return;
+    const durationMs = new Date(endDate).getTime() - new Date(startDate).getTime();
+    setStartDate(toDateInputValue(week.start));
+    setEndDate(toDateInputValue(new Date(week.start.getTime() + durationMs)));
+  }
+
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    onSave({ name, assigneeId: assigneeId || undefined, status, dependencies });
+    onSave({ name, assigneeId: assigneeId || undefined, status, dependencies, startDate, endDate });
   }
 
   return (
@@ -48,6 +61,54 @@ export function TaskEditModal({ task, otherTasks, onClose, onSave, onDelete }: P
             className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
             required
           />
+        </div>
+
+        <div className="flex gap-3">
+          <div className="flex-1">
+            <label htmlFor="week" className="block text-sm text-gray-600">
+              Semana
+            </label>
+            <select
+              id="week"
+              value={weekOptions.findIndex(
+                (week) => toDateInputValue(week.start) === startDate,
+              )}
+              onChange={applyWeek}
+              className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+            >
+              {weekOptions.map((week, index) => (
+                <option key={week.label} value={index}>
+                  {week.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex-1">
+            <label htmlFor="edit-start-date" className="block text-sm text-gray-600">
+              Início
+            </label>
+            <input
+              id="edit-start-date"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+              required
+            />
+          </div>
+          <div className="flex-1">
+            <label htmlFor="edit-end-date" className="block text-sm text-gray-600">
+              Fim
+            </label>
+            <input
+              id="edit-end-date"
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+              required
+            />
+          </div>
         </div>
 
         <div>

@@ -1,14 +1,25 @@
 import { useState, type FormEvent } from 'react';
+import { getWeekOptions, toDateInputValue, type TaskDateRange } from '../gantt/computeWeekColumns.js';
 
 interface Props {
+  tasks: TaskDateRange[];
   onClose: () => void;
   onCreate: (dto: { name: string; startDate: string; endDate: string }) => void;
 }
 
-export function CreateTaskModal({ onClose, onCreate }: Props) {
+export function CreateTaskModal({ tasks, onClose, onCreate }: Props) {
   const [name, setName] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+
+  const weekOptions = getWeekOptions(tasks, new Date());
+
+  function applyWeek(e: React.ChangeEvent<HTMLSelectElement>) {
+    const week = weekOptions[Number(e.target.value)];
+    if (!week) return;
+    setStartDate(toDateInputValue(week.start));
+    setEndDate(toDateInputValue(week.end));
+  }
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -30,6 +41,26 @@ export function CreateTaskModal({ onClose, onCreate }: Props) {
             className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
             required
           />
+        </div>
+        <div>
+          <label htmlFor="week" className="block text-sm text-gray-600">
+            Semana
+          </label>
+          <select
+            id="week"
+            defaultValue=""
+            onChange={applyWeek}
+            className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+          >
+            <option value="" disabled>
+              Selecione uma semana
+            </option>
+            {weekOptions.map((week, index) => (
+              <option key={week.label} value={index}>
+                {week.label}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex gap-3">
           <div className="flex-1">

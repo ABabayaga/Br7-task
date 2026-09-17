@@ -92,7 +92,11 @@ export function ProjectGanttPage() {
       )}
 
       {showCreateModal && (
-        <CreateTaskModal onClose={() => setShowCreateModal(false)} onCreate={handleCreate} />
+        <CreateTaskModal
+          tasks={tasks}
+          onClose={() => setShowCreateModal(false)}
+          onCreate={handleCreate}
+        />
       )}
 
       {selectedTask && (

@@ -94,4 +94,23 @@ describe('Projects (e2e)', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(404);
   });
+
+  it('creates a blank project without a service type and no generated tasks', async () => {
+    const created = await request(app.getHttpServer())
+      .post('/projects')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Projeto sob medida',
+        clientId,
+        startDate: '2026-01-01',
+      })
+      .expect(201);
+    expect(created.body.serviceTypeId).toBeUndefined();
+
+    const tasks = await request(app.getHttpServer())
+      .get(`/projects/${created.body._id}/tasks`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(tasks.body).toEqual([]);
+  });
 });

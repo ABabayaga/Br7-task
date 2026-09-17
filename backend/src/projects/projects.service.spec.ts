@@ -157,6 +157,21 @@ describe('ProjectsService', () => {
     ]);
   });
 
+  it('creates a blank project without a service type, skipping task generation', async () => {
+    clientsServiceMock.assertActive.mockResolvedValue({ _id: 'c1', active: true });
+    modelMock.create.mockResolvedValue({ _id: 'p1' });
+
+    const project = await service.create(
+      { name: 'Campanha X', clientId: 'c1', startDate: '2026-01-01' },
+      'user-1',
+    );
+
+    expect(serviceTypesServiceMock.assertActive).not.toHaveBeenCalled();
+    expect(stageTemplatesServiceMock.findAllForServiceType).not.toHaveBeenCalled();
+    expect(tasksServiceMock.generateFromTemplate).not.toHaveBeenCalled();
+    expect(project).toEqual({ _id: 'p1' });
+  });
+
   it('throws NotFoundException when the project does not exist', async () => {
     modelMock.findById.mockResolvedValue(null);
 

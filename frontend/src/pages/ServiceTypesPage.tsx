@@ -28,7 +28,7 @@ export function ServiceTypesPage() {
   return (
     <div className="mx-auto max-w-3xl p-8">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">Tipos de serviço</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Template Serviços</h1>
         <button
           onClick={() => setShowModal(true)}
           className="rounded-lg bg-linear-to-r from-[#E0176A] to-[#FF5A36] px-4 py-2 font-medium text-white transition-transform hover:scale-[1.02]"

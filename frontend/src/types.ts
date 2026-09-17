@@ -71,7 +71,7 @@ export interface Project {
   status: ProjectStatus;
   createdBy: string;
   clientId: string;
-  serviceTypeId: string;
+  serviceTypeId?: string;
   startDate: string;
 }
 

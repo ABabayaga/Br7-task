@@ -87,4 +87,26 @@ describe('ProjectGanttPage', () => {
       }),
     );
   });
+
+  it('fills start/end dates from the week picker in the create-task modal', async () => {
+    vi.spyOn(tasksApi, 'listTasks').mockResolvedValue(tasks);
+    vi.spyOn(tasksApi, 'createTask').mockResolvedValue(tasks[0]);
+
+    renderPage();
+    await waitFor(() => expect(screen.getAllByText('Briefing').length).toBeGreaterThan(0));
+
+    await userEvent.click(screen.getByRole('button', { name: /adicionar tarefa/i }));
+    await userEvent.type(screen.getByLabelText(/^nome$/i), 'Produção');
+    // tasks range Jan 1-5 -> Sem 1 (Jan1-7); trailing option Sem 2 (Jan8-14)
+    await userEvent.selectOptions(screen.getByLabelText(/semana/i), 'Sem 2');
+    await userEvent.click(screen.getByRole('button', { name: /criar/i }));
+
+    await waitFor(() =>
+      expect(tasksApi.createTask).toHaveBeenCalledWith('p1', {
+        name: 'Produção',
+        startDate: '2026-01-08',
+        endDate: '2026-01-14',
+      }),
+    );
+  });
 });

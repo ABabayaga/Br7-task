@@ -46,7 +46,7 @@ describe('DashboardPage', () => {
     expect(await screen.findByText('Campanha X')).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: /novo projeto/i }));
-    await screen.findByText('Upper GR');
+    await screen.findByRole('option', { name: 'Upper GR' });
     await userEvent.type(screen.getByLabelText(/^nome$/i), 'Nova Campanha');
     await userEvent.type(screen.getByLabelText(/data de início/i), '2026-02-01');
     await userEvent.click(screen.getByRole('button', { name: /^criar$/i }));
@@ -60,5 +60,115 @@ describe('DashboardPage', () => {
         startDate: '2026-02-01',
       }),
     );
+  });
+
+  it('groups projects by client with a header per client', async () => {
+    vi.spyOn(projectsApi, 'listProjects').mockResolvedValue([
+      ...projects,
+      {
+        _id: '3',
+        name: 'Avante Global - Site',
+        status: 'active',
+        createdBy: 'admin',
+        clientId: 'c2',
+        serviceTypeId: 'st1',
+        startDate: '2026-01-01',
+      },
+    ]);
+    vi.spyOn(clientsApi, 'listClients').mockResolvedValue([
+      { _id: 'c1', name: 'Upper GR', active: true },
+      { _id: 'c2', name: 'Avante Global', active: true },
+    ]);
+    vi.spyOn(serviceTypesApi, 'listServiceTypes').mockResolvedValue([
+      { _id: 'st1', name: 'Social Media', active: true },
+    ]);
+
+    render(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+    );
+
+    await screen.findByText('Campanha X');
+    const headings = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
+    expect(headings).toEqual(['Avante Global', 'Upper GR']);
+  });
+
+  it('creates one project per selected service type, suffixing the name', async () => {
+    vi.spyOn(projectsApi, 'listProjects').mockResolvedValue([]);
+    vi.spyOn(clientsApi, 'listClients').mockResolvedValue([{ _id: 'c1', name: 'Upper GR', active: true }]);
+    vi.spyOn(serviceTypesApi, 'listServiceTypes').mockResolvedValue([
+      { _id: 'st1', name: 'Social Media', active: true },
+      { _id: 'st2', name: 'Tráfego Pago', active: true },
+    ]);
+    vi.spyOn(projectsApi, 'createProject').mockResolvedValue({
+      _id: '2',
+      name: 'Nova Campanha',
+      status: 'active',
+      createdBy: 'admin',
+      clientId: 'c1',
+      serviceTypeId: 'st1',
+      startDate: '2026-02-01',
+    });
+
+    render(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: /novo projeto/i }));
+    await screen.findByText('Upper GR');
+    await userEvent.type(screen.getByLabelText(/^nome$/i), 'Nova Campanha');
+    await userEvent.click(screen.getByLabelText(/selecionar todos/i));
+    await userEvent.type(screen.getByLabelText(/data de início/i), '2026-02-01');
+    await userEvent.click(screen.getByRole('button', { name: /^criar$/i }));
+
+    await waitFor(() => expect(projectsApi.createProject).toHaveBeenCalledTimes(2));
+    expect(projectsApi.createProject).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Nova Campanha - Social Media', serviceTypeId: 'st1' }),
+    );
+    expect(projectsApi.createProject).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Nova Campanha - Tráfego Pago', serviceTypeId: 'st2' }),
+    );
+  });
+
+  it('creates a single blank project with no service type when "sem template" is checked', async () => {
+    vi.spyOn(projectsApi, 'listProjects').mockResolvedValue([]);
+    vi.spyOn(clientsApi, 'listClients').mockResolvedValue([{ _id: 'c1', name: 'Upper GR', active: true }]);
+    vi.spyOn(serviceTypesApi, 'listServiceTypes').mockResolvedValue([
+      { _id: 'st1', name: 'Social Media', active: true },
+    ]);
+    vi.spyOn(projectsApi, 'createProject').mockResolvedValue({
+      _id: '2',
+      name: 'Projeto sob medida',
+      status: 'active',
+      createdBy: 'admin',
+      clientId: 'c1',
+      startDate: '2026-02-01',
+    });
+
+    render(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: /novo projeto/i }));
+    await screen.findByText('Upper GR');
+    await userEvent.type(screen.getByLabelText(/^nome$/i), 'Projeto sob medida');
+    await userEvent.click(screen.getByLabelText(/projeto em branco/i));
+    await userEvent.type(screen.getByLabelText(/data de início/i), '2026-02-01');
+    await userEvent.click(screen.getByRole('button', { name: /^criar$/i }));
+
+    await waitFor(() =>
+      expect(projectsApi.createProject).toHaveBeenCalledWith({
+        name: 'Projeto sob medida',
+        description: undefined,
+        clientId: 'c1',
+        startDate: '2026-02-01',
+      }),
+    );
+    expect(projectsApi.createProject).toHaveBeenCalledTimes(1);
   });
 });

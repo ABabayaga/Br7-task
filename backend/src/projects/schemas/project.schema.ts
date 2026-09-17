@@ -21,8 +21,8 @@ export class Project {
   @Prop({ type: Types.ObjectId, ref: 'Client', required: true })
   clientId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'ServiceType', required: true })
-  serviceTypeId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'ServiceType' })
+  serviceTypeId?: Types.ObjectId;
 
   @Prop({ required: true })
   startDate: Date;

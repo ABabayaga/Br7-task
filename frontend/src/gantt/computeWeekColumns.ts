@@ -35,3 +35,24 @@ export function isTaskActiveInWeek(task: TaskDateRange, week: WeekColumn): boole
   const taskEnd = new Date(task.endDate);
   return taskStart <= week.end && taskEnd >= week.start;
 }
+
+// Week choices for a "Semana" picker: the project's current week columns
+// (derived from `tasks`) plus one trailing week so users can push a task
+// past the range instead of only choosing among existing weeks. Falls back
+// to a single week starting at `fallbackStart` (e.g. "today") when there
+// are no tasks yet to derive a range from.
+export function getWeekOptions(tasks: TaskDateRange[], fallbackStart: Date): WeekColumn[] {
+  const weeks = computeWeekColumns(tasks);
+  if (weeks.length === 0) {
+    return [{ label: 'Sem 1', start: fallbackStart, end: new Date(fallbackStart.getTime() + WEEK_MS - DAY_MS) }];
+  }
+
+  const last = weeks[weeks.length - 1];
+  const nextStart = new Date(last.start.getTime() + WEEK_MS);
+  const nextEnd = new Date(nextStart.getTime() + WEEK_MS - DAY_MS);
+  return [...weeks, { label: `Sem ${weeks.length + 1}`, start: nextStart, end: nextEnd }];
+}
+
+export function toDateInputValue(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}

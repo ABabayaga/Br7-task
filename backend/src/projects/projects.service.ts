@@ -23,7 +23,9 @@ export class ProjectsService {
 
   async create(dto: CreateProjectDto, createdBy: string): Promise<ProjectDocument> {
     await this.clientsService.assertActive(dto.clientId);
-    await this.serviceTypesService.assertActive(dto.serviceTypeId);
+    if (dto.serviceTypeId) {
+      await this.serviceTypesService.assertActive(dto.serviceTypeId);
+    }
 
     const project = (await this.projectModel.create({
       name: dto.name,
@@ -33,6 +35,12 @@ export class ProjectsService {
       startDate: dto.startDate,
       createdBy,
     })) as ProjectDocument;
+
+    // A project created without a service type is a blank project: no
+    // stage templates to generate tasks from, tasks are added manually.
+    if (!dto.serviceTypeId) {
+      return project;
+    }
 
     try {
       const stageTemplates = await this.stageTemplatesService.findAllForServiceType(

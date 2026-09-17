@@ -11,8 +11,9 @@ export class CreateProjectDto {
   @IsString()
   clientId: string;
 
+  @IsOptional()
   @IsString()
-  serviceTypeId: string;
+  serviceTypeId?: string;
 
   @IsDateString()
   startDate: string;

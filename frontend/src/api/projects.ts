@@ -9,7 +9,7 @@ export function createProject(dto: {
   name: string;
   description?: string;
   clientId: string;
-  serviceTypeId: string;
+  serviceTypeId?: string;
   startDate: string;
 }) {
   return apiClient.post<Project>('/projects', dto).then((res) => res.data);
