@@ -20,6 +20,8 @@ import { SeedServiceTemplatesService } from './service-types/seed-service-templa
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         uri: config.getOrThrow<string>('MONGODB_URI'),
+        serverSelectionTimeoutMS: 10000,
+        family: 4,
       }),
     }),
     AuthModule,
