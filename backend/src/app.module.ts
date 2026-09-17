@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { AppController } from './app.controller.js';
-import { AppService } from './app.service.js';
 import { ProjectsModule } from './projects/projects.module.js';
 import { TasksModule } from './tasks/tasks.module.js';
 import { UsersModule } from './users/users.module.js';
@@ -33,7 +31,6 @@ import { SeedServiceTemplatesService } from './service-types/seed-service-templa
     ProjectsModule,
     TasksModule,
   ],
-  controllers: [AppController],
-  providers: [AppService, SeedServiceTemplatesService],
+  providers: [SeedServiceTemplatesService],
 })
 export class AppModule {}
