@@ -160,4 +160,59 @@ describe('Project creation generates tasks from template (e2e)', () => {
     expect(tasks.body).toHaveLength(1);
     expect(tasks.body[0].name).toBe('Briefing');
   });
+
+  it('carries the phase name/color snapshot onto generated tasks', async () => {
+    const serviceType = await request(app.getHttpServer())
+      .post('/service-types')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: `Social Media ${Date.now()}-${Math.random()}` });
+    const serviceTypeId = serviceType.body._id;
+
+    const phase = await request(app.getHttpServer())
+      .post(`/service-types/${serviceTypeId}/phases`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Fase I', color: '#2563EB', startDay: 1, endDay: 2 });
+
+    const stage1 = await request(app.getHttpServer())
+      .post(`/service-types/${serviceTypeId}/stage-templates`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Briefing',
+        defaultSector: 'diretoria_criacao',
+        defaultDurationDays: 2,
+        phaseId: phase.body._id,
+      });
+    await request(app.getHttpServer())
+      .post(`/service-types/${serviceTypeId}/stage-templates`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Facebook', defaultSector: 'criacao', defaultDurationDays: 1 });
+
+    const client = await request(app.getHttpServer())
+      .post('/clients')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Cliente Fases' });
+
+    const project = await request(app.getHttpServer())
+      .post('/projects')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Campanha Fases',
+        clientId: client.body._id,
+        serviceTypeId,
+        startDate: '2026-01-01',
+      })
+      .expect(201);
+
+    const tasks = await request(app.getHttpServer())
+      .get(`/projects/${project.body._id}/tasks`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    const briefingTask = tasks.body.find((t: { name: string }) => t.name === 'Briefing');
+    const facebookTask = tasks.body.find((t: { name: string }) => t.name === 'Facebook');
+    expect(briefingTask.phaseName).toBe('Fase I');
+    expect(briefingTask.phaseColor).toBe('#2563EB');
+    expect(facebookTask.phaseName).toBeUndefined();
+    expect(stage1.body.phaseId).toBe(phase.body._id);
+  });
 });

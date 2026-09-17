@@ -6,6 +6,7 @@ import { Project } from './schemas/project.schema.js';
 import { ClientsService } from '../clients/clients.service.js';
 import { ServiceTypesService } from '../service-types/service-types.service.js';
 import { StageTemplatesService } from '../stage-templates/stage-templates.service.js';
+import { PhasesService } from '../phases/phases.service.js';
 import { TasksService } from '../tasks/tasks.service.js';
 
 describe('ProjectsService', () => {
@@ -23,10 +24,12 @@ describe('ProjectsService', () => {
   };
   const serviceTypesServiceMock = { assertActive: vi.fn() };
   const stageTemplatesServiceMock = { findAllForServiceType: vi.fn() };
+  const phasesServiceMock = { findAllForServiceType: vi.fn() };
   const tasksServiceMock = { generateFromTemplate: vi.fn() };
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    phasesServiceMock.findAllForServiceType.mockResolvedValue([]);
     const moduleRef = await Test.createTestingModule({
       providers: [
         ProjectsService,
@@ -34,6 +37,7 @@ describe('ProjectsService', () => {
         { provide: ClientsService, useValue: clientsServiceMock },
         { provide: ServiceTypesService, useValue: serviceTypesServiceMock },
         { provide: StageTemplatesService, useValue: stageTemplatesServiceMock },
+        { provide: PhasesService, useValue: phasesServiceMock },
         { provide: TasksService, useValue: tasksServiceMock },
       ],
     }).compile();
@@ -114,6 +118,42 @@ describe('ProjectsService', () => {
 
     expect(tasksServiceMock.generateFromTemplate).toHaveBeenCalledWith('p1', '2026-01-01', [
       { id: 's1', name: 'Briefing', defaultSector: 'criacao', defaultDurationDays: 2 },
+    ]);
+  });
+
+  it('carries the phase name/color snapshot onto generated stages when a stage has a phaseId', async () => {
+    clientsServiceMock.assertActive.mockResolvedValue({ _id: 'c1', active: true });
+    serviceTypesServiceMock.assertActive.mockResolvedValue({ _id: 'st1', active: true });
+    modelMock.create.mockResolvedValue({ _id: 'p1' });
+    stageTemplatesServiceMock.findAllForServiceType.mockResolvedValue([
+      {
+        _id: { toString: () => 's1' },
+        name: 'Briefing',
+        defaultSector: 'criacao',
+        defaultDurationDays: 2,
+        active: true,
+        phaseId: { toString: () => 'ph1' },
+      },
+    ]);
+    phasesServiceMock.findAllForServiceType.mockResolvedValue([
+      { _id: { toString: () => 'ph1' }, name: 'Fase I', color: '#2563EB' },
+    ]);
+    clientsServiceMock.getDisabledStageTemplateIds.mockResolvedValue([]);
+
+    await service.create(
+      { name: 'Campanha X', clientId: 'c1', serviceTypeId: 'st1', startDate: '2026-01-01' },
+      'user-1',
+    );
+
+    expect(tasksServiceMock.generateFromTemplate).toHaveBeenCalledWith('p1', '2026-01-01', [
+      {
+        id: 's1',
+        name: 'Briefing',
+        defaultSector: 'criacao',
+        defaultDurationDays: 2,
+        phaseName: 'Fase I',
+        phaseColor: '#2563EB',
+      },
     ]);
   });
 

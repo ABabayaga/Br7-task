@@ -6,6 +6,7 @@ import { Project, ProjectSchema } from './schemas/project.schema.js';
 import { ClientsModule } from '../clients/clients.module.js';
 import { ServiceTypesModule } from '../service-types/service-types.module.js';
 import { StageTemplatesModule } from '../stage-templates/stage-templates.module.js';
+import { PhasesModule } from '../phases/phases.module.js';
 import { TasksModule } from '../tasks/tasks.module.js';
 
 @Module({
@@ -14,6 +15,7 @@ import { TasksModule } from '../tasks/tasks.module.js';
     ClientsModule,
     ServiceTypesModule,
     StageTemplatesModule,
+    PhasesModule,
     TasksModule,
   ],
   providers: [ProjectsService],

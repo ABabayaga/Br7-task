@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Gantt, ViewMode, type Task as GanttTask } from 'gantt-task-react';
-import 'gantt-task-react/dist/index.css';
 import { listTasks, createTask, updateTask, deleteTask } from '../api/tasks.js';
-import { mapTasksToGanttFormat } from '../gantt/mapTasksToGanttFormat.js';
+import { listUsers } from '../api/users.js';
+import { TaskChecklistGantt } from '../gantt/TaskChecklistGantt.js';
 import { CreateTaskModal } from '../components/CreateTaskModal.js';
 import { TaskEditModal } from '../components/TaskEditModal.js';
-import type { Task } from '../types.js';
+import type { Task, User } from '../types.js';
 
 export function ProjectGanttPage() {
   const { id: projectId } = useParams<{ id: string }>();
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -22,28 +22,21 @@ export function ProjectGanttPage() {
   }
 
   useEffect(refresh, [projectId]);
+  useEffect(() => {
+    listUsers().then(setUsers);
+  }, []);
 
-  async function handleDateChange(ganttTask: GanttTask) {
+  async function handleToggleDone(task: Task) {
     setError(null);
     try {
-      await updateTask(ganttTask.id, {
-        startDate: ganttTask.start.toISOString(),
-        endDate: ganttTask.end.toISOString(),
-      });
+      // The checklist checkbox is binary: checking it marks any non-done
+      // task (todo or in_progress) as done; unchecking always reverts to
+      // todo. There's no round trip back to in_progress via the checkbox —
+      // that still requires the edit modal.
+      await updateTask(task._id, { status: task.status === 'done' ? 'todo' : 'done' });
       refresh();
     } catch {
-      setError('Não foi possível atualizar as datas.');
-      refresh();
-    }
-  }
-
-  async function handleProgressChange(ganttTask: GanttTask) {
-    setError(null);
-    try {
-      await updateTask(ganttTask.id, { progress: ganttTask.progress });
-      refresh();
-    } catch {
-      setError('Não foi possível atualizar o progresso.');
+      setError('Não foi possível atualizar o status.');
       refresh();
     }
   }
@@ -73,8 +66,6 @@ export function ProjectGanttPage() {
     refresh();
   }
 
-  const ganttTasks = mapTasksToGanttFormat(tasks);
-
   return (
     <div className="p-8">
       <div className="mb-4 flex items-center justify-between">
@@ -89,13 +80,12 @@ export function ProjectGanttPage() {
 
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
-      {ganttTasks.length > 0 ? (
-        <Gantt
-          tasks={ganttTasks}
-          viewMode={ViewMode.Day}
-          onDateChange={handleDateChange}
-          onProgressChange={handleProgressChange}
-          onClick={(ganttTask) => setSelectedTaskId(ganttTask.id)}
+      {tasks.length > 0 ? (
+        <TaskChecklistGantt
+          tasks={tasks}
+          users={users}
+          onToggleDone={handleToggleDone}
+          onOpenTask={(task) => setSelectedTaskId(task._id)}
         />
       ) : (
         <p className="text-gray-500">Nenhuma tarefa ainda.</p>

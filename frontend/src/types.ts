@@ -89,4 +89,6 @@ export interface Task {
   status: TaskStatus;
   setor?: Sector;
   sourceStageTemplateId?: string;
+  phaseName?: string;
+  phaseColor?: string;
 }

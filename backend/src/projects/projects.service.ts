@@ -7,6 +7,7 @@ import { UpdateProjectDto } from './dto/update-project.dto.js';
 import { ClientsService } from '../clients/clients.service.js';
 import { ServiceTypesService } from '../service-types/service-types.service.js';
 import { StageTemplatesService } from '../stage-templates/stage-templates.service.js';
+import { PhasesService } from '../phases/phases.service.js';
 import { TasksService } from '../tasks/tasks.service.js';
 
 @Injectable()
@@ -16,6 +17,7 @@ export class ProjectsService {
     private readonly clientsService: ClientsService,
     private readonly serviceTypesService: ServiceTypesService,
     private readonly stageTemplatesService: StageTemplatesService,
+    private readonly phasesService: PhasesService,
     private readonly tasksService: TasksService,
   ) {}
 
@@ -40,15 +42,22 @@ export class ProjectsService {
         dto.clientId,
         dto.serviceTypeId,
       );
+      const phases = await this.phasesService.findAllForServiceType(dto.serviceTypeId);
+      const phaseById = new Map(phases.map((phase) => [phase._id.toString(), phase]));
       const activeStages = stageTemplates
         .filter((stage) => stage.active)
         .filter((stage) => !disabledIds.includes(stage._id.toString()))
-        .map((stage) => ({
-          id: stage._id.toString(),
-          name: stage.name,
-          defaultSector: stage.defaultSector,
-          defaultDurationDays: stage.defaultDurationDays,
-        }));
+        .map((stage) => {
+          const phase = stage.phaseId ? phaseById.get(stage.phaseId.toString()) : undefined;
+          return {
+            id: stage._id.toString(),
+            name: stage.name,
+            defaultSector: stage.defaultSector,
+            defaultDurationDays: stage.defaultDurationDays,
+            phaseName: phase?.name,
+            phaseColor: phase?.color,
+          };
+        });
 
       if (activeStages.length > 0) {
         await this.tasksService.generateFromTemplate(

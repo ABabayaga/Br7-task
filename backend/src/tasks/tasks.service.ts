@@ -12,6 +12,8 @@ export interface StageTemplateInput {
   name: string;
   defaultSector: Sector;
   defaultDurationDays: number;
+  phaseName?: string;
+  phaseColor?: string;
 }
 
 @Injectable()
@@ -94,6 +96,8 @@ export class TasksService {
         setor: stage.defaultSector,
         sourceStageTemplateId: stage.id,
         dependencies: previousTaskId ? [previousTaskId] : [],
+        phaseName: stage.phaseName,
+        phaseColor: stage.phaseColor,
       })) as TaskDocument;
 
       created.push(task);

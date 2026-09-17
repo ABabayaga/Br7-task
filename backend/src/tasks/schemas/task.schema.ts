@@ -37,6 +37,12 @@ export class Task {
 
   @Prop({ type: Types.ObjectId, ref: 'StageTemplate' })
   sourceStageTemplateId?: Types.ObjectId;
+
+  @Prop()
+  phaseName?: string;
+
+  @Prop()
+  phaseColor?: string;
 }
 
 export const TaskSchema = SchemaFactory.createForClass(Task);

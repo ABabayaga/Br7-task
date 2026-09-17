@@ -48,14 +48,16 @@ against real data; `VITE_API_URL` in `.env` points at it (defaults to
   than calling axios directly from components.
 - **Routing**: three routes in `App.tsx` — `/login`, `/` (dashboard), and
   `/projects/:id` (Gantt view) — the latter two behind `ProtectedRoute`.
-- **Gantt view** (`src/pages/ProjectGanttPage.tsx`): renders `gantt-task-react`.
-  Tasks from the API are converted to the library's shape via
-  `src/gantt/mapTasksToGanttFormat.ts`. Dragging/resizing bars issues
-  optimistic `PATCH /tasks/:id` calls; on failure the UI should revert to
-  last-confirmed server state (see spec's "Tratamento de erros" section).
-  Dependencies are *not* drawn on the canvas (the library doesn't support
-  it) — they're set via a multi-select in `TaskEditModal.tsx`, and the chart
-  only renders the resulting arrows.
+- **Gantt view** (`src/pages/ProjectGanttPage.tsx`): renders
+  `src/gantt/TaskChecklistGantt.tsx`, a home-grown checklist-style table (no
+  external Gantt library) — stats/progress header, status filter pills, and
+  one row per task with a checkbox (toggles `todo`↔`done` via `PATCH
+  /tasks/:id`) plus a dot per week column showing when the task is active.
+  Week columns are computed from the tasks' own date range by
+  `src/gantt/computeWeekColumns.ts` (no fixed calendar). Clicking anywhere
+  else on a row opens `TaskEditModal.tsx` for full editing (name, assignee,
+  status, dependencies). Dependencies are not drawn visually — they're only
+  set via the multi-select in `TaskEditModal.tsx`.
 - **Imports**: relative imports use explicit `.js` extensions on `.ts`/`.tsx`
   files (TS `moduleResolution: bundler` + `allowImportingTsExtensions`) —
   follow this pattern for new files (`import { x } from './foo.js'` even

@@ -69,4 +69,33 @@ describe('TasksService', () => {
     });
     expect(created).toHaveLength(2);
   });
+
+  it('carries phase name/color snapshot onto generated tasks when the stage has one', async () => {
+    modelMock.create.mockResolvedValueOnce({ _id: 'task-1', name: 'Briefing' });
+
+    const stages = [
+      {
+        id: 'stage-1',
+        name: 'Briefing',
+        defaultSector: 'criacao' as const,
+        defaultDurationDays: 1,
+        phaseName: 'Fase I',
+        phaseColor: '#2563EB',
+      },
+    ];
+
+    await service.generateFromTemplate('project-1', '2026-01-01', stages);
+
+    expect(modelMock.create).toHaveBeenCalledWith({
+      name: 'Briefing',
+      projectId: 'project-1',
+      startDate: new Date('2026-01-01'),
+      endDate: new Date('2026-01-01'),
+      setor: 'criacao',
+      sourceStageTemplateId: 'stage-1',
+      dependencies: [],
+      phaseName: 'Fase I',
+      phaseColor: '#2563EB',
+    });
+  });
 });

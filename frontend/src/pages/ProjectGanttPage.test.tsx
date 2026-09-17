@@ -1,9 +1,10 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProjectGanttPage } from './ProjectGanttPage.js';
 import * as tasksApi from '../api/tasks.js';
+import * as usersApi from '../api/users.js';
 import type { Task } from '../types.js';
 
 const tasks: Task[] = [
@@ -30,14 +31,30 @@ function renderPage() {
 }
 
 describe('ProjectGanttPage', () => {
+  beforeEach(() => {
+    vi.spyOn(usersApi, 'listUsers').mockResolvedValue([]);
+  });
+
   it('loads and displays the project tasks', async () => {
     vi.spyOn(tasksApi, 'listTasks').mockResolvedValue(tasks);
 
     renderPage();
 
-    // gantt-task-react renders the task name both in the left-hand list
-    // and inside the SVG bar label, so there are always 2+ matches.
-    await waitFor(() => expect(screen.getAllByText('Briefing').length).toBeGreaterThan(0));
+    await waitFor(() => expect(screen.getByText('Briefing')).toBeInTheDocument());
+  });
+
+  it('toggles a task to done when its checkbox is clicked', async () => {
+    vi.spyOn(tasksApi, 'listTasks').mockResolvedValue(tasks);
+    vi.spyOn(tasksApi, 'updateTask').mockResolvedValue({ ...tasks[0], status: 'done' });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Briefing')).toBeInTheDocument());
+
+    await userEvent.click(screen.getByTestId('checkbox-a'));
+
+    await waitFor(() =>
+      expect(tasksApi.updateTask).toHaveBeenCalledWith('a', { status: 'done' }),
+    );
   });
 
   it('creates a task via the modal and refreshes the list', async () => {
