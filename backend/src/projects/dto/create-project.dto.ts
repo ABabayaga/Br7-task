@@ -1,4 +1,4 @@
-import { IsDateString, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsMongoId, IsOptional, IsString } from 'class-validator';
 
 export class CreateProjectDto {
   @IsString()
@@ -8,11 +8,11 @@ export class CreateProjectDto {
   @IsString()
   description?: string;
 
-  @IsString()
+  @IsMongoId()
   clientId: string;
 
   @IsOptional()
-  @IsString()
+  @IsMongoId()
   serviceTypeId?: string;
 
   @IsDateString()

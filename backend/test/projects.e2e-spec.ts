@@ -113,4 +113,29 @@ describe('Projects (e2e)', () => {
       .expect(200);
     expect(tasks.body).toEqual([]);
   });
+
+  it('rejects a malformed clientId with 400 instead of failing to cast it', async () => {
+    await request(app.getHttpServer())
+      .post('/projects')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Projeto sem cliente',
+        clientId: '',
+        startDate: '2026-01-01',
+      })
+      .expect(400);
+  });
+
+  it('rejects a malformed serviceTypeId with 400 instead of failing to cast it', async () => {
+    await request(app.getHttpServer())
+      .post('/projects')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Projeto com servico invalido',
+        clientId,
+        serviceTypeId: 'nao-e-um-object-id',
+        startDate: '2026-01-01',
+      })
+      .expect(400);
+  });
 });

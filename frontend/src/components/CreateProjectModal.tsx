@@ -93,6 +93,11 @@ export function CreateProjectModal({ clients, serviceTypes, onClose, onCreate }:
               </option>
             ))}
           </select>
+          {clients.length === 0 && (
+            <p className="mt-1 text-xs text-gray-500">
+              Nenhum cliente cadastrado. Cadastre um cliente antes de criar um projeto.
+            </p>
+          )}
         </div>
         <label className="flex items-center gap-2 text-sm text-gray-600">
           <input
@@ -151,7 +156,7 @@ export function CreateProjectModal({ clients, serviceTypes, onClose, onCreate }:
           </button>
           <button
             type="submit"
-            disabled={!noTemplate && serviceTypeIds.length === 0}
+            disabled={!clientId || (!noTemplate && serviceTypeIds.length === 0)}
             className="rounded-lg bg-linear-to-r from-[#E0176A] to-[#FF5A36] px-4 py-2 font-medium text-white transition-transform hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
           >
             Criar
